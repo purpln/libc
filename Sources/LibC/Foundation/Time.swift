@@ -1,9 +1,69 @@
+@usableFromInline
+internal let absoluteTimeIntervalSince1970: Double = 978307200
+
 public extension timespec {
     @inlinable
-    static func now() -> timespec {
+    static var now: timespec {
         var timespec = timespec()
         clock_gettime(_CLOCK_REALTIME, &timespec)
         return timespec
+    }
+    
+    @inlinable
+    static var absolute: Double {
+        now.interval - absoluteTimeIntervalSince1970
+    }
+}
+
+public extension timespec {
+    @inlinable
+    init<T: BinaryFloatingPoint>(interval: T) {
+        let (whole, fraction) = modf(interval)
+        self = timespec(tv_sec: time_t(whole), tv_nsec: Int(fraction * 1e9))
+    }
+    
+    @inlinable
+    var interval: Double {
+        let (seconds, nanoseconds) = components
+        return (seconds) + (nanoseconds * 1e-9)
+    }
+    
+    @inlinable
+    var components: (seconds: Double, nanoseconds: Double) {
+        (Double(tv_sec), Double(tv_nsec))
+    }
+}
+
+public extension timeval {
+    @inlinable
+    static var now: timeval {
+        var timeval = timeval()
+        gettimeofday(&timeval, nil)
+        return timeval
+    }
+    
+    @inlinable
+    static var absolute: Double {
+        now.interval - absoluteTimeIntervalSince1970
+    }
+}
+
+public extension timeval {
+    @inlinable
+    init<T: BinaryFloatingPoint>(interval: T) {
+        let (whole, fraction) = modf(interval)
+        self = timeval(tv_sec: time_t(whole), tv_usec: suseconds_t(fraction * 1e6))
+    }
+    
+    @inlinable
+    var interval: Double {
+        let (seconds, microseconds) = components
+        return (seconds) + (microseconds * 1e-6)
+    }
+    
+    @inlinable
+    var components: (seconds: Double, microseconds: Double) {
+        (Double(tv_sec), Double(tv_usec))
     }
 }
 
@@ -95,15 +155,6 @@ extension timespec /* CustomStringConvertible */ {
             count = strftime(buffer.baseAddress!, length, /* %A */ "%Y-%m-%d %H:%M:%S %z", ts!)
         }
         return String(decoding: buffer, as: UTF8.self)
-    }
-}
-
-public extension timeval {
-    @inlinable
-    static func now() -> timeval {
-        var timeval = timeval()
-        gettimeofday(&timeval, nil)
-        return timeval
     }
 }
 

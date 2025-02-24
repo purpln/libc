@@ -246,6 +246,11 @@ public typealias system_DIRPtr = OpaquePointer
 #else
 public typealias system_DIRPtr = UnsafeMutablePointer<DIR>
 #endif
+#if canImport(Android) || os(WASI)
+public typealias system_FILEPtr = OpaquePointer
+#else
+public typealias system_FILEPtr = UnsafeMutablePointer<FILE>
+#endif
 
 public func system_unlinkat(
     _ descriptor: CInt,

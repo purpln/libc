@@ -316,7 +316,7 @@ extension in_addr: Equatable {}
 extension in6_addr: Equatable {}
 #endif
  
-protocol NativeStructEquatable {}
+public protocol NativeStructEquatable {}
 
 extension sockaddr_in: NativeStructEquatable {}
 extension sockaddr_in6: NativeStructEquatable {}
