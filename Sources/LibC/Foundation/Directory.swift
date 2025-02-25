@@ -76,11 +76,11 @@ public func getExecutablePath() -> String? {
 #endif
 }
 
-public func getDirectoryContents(_ path: String) throws -> [(name: String, type: FileType)] {
-    let allocator = Allocator(open: {
-        guard let pointer = system_opendir(path) else { throw Errno() }
+public func getDirectoryContents(_ path: String) throws(Errno) -> [(name: String, type: FileType)] {
+    let allocator = Allocator(open: { () throws(Errno) in
+        guard let pointer = system_opendir(path) else { throw Errno.current }
         return pointer
-    }, close: { pointer in
+    }, close: { pointer throws(Errno) in
         try nothingOrErrno(retryOnInterrupt: false, {
             system_closedir(pointer)
         }).get()
@@ -136,4 +136,16 @@ public func exists(path: String) -> Bool {
         return false
     }
     return true
+}
+
+public func createDirectory(_ path: String) throws(Errno) {
+    try nothingOrErrno(retryOnInterrupt: false, {
+        system_mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)
+    }).get()
+}
+
+public func removeDirectory(_ path: String) throws(Errno) {
+    try nothingOrErrno(retryOnInterrupt: false, {
+        system_rmdir(path)
+    }).get()
 }

@@ -96,7 +96,6 @@ extension String {
     ) rethrows -> Result {
         try _withPlatformString(body)
     }
-    
 }
 
 extension PlatformChar {

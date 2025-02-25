@@ -1,5 +1,5 @@
 #if !os(WASI)
-private func getaddrinfo(node: String, service: String, hints: addrinfo?) throws -> [String] {
+private func getaddrinfo(node: String, service: String, hints: addrinfo?) throws(Errno) -> [String] {
     var result: CInt
     var resolved: UnsafeMutablePointer<addrinfo>?
     if var hints = hints {
@@ -8,7 +8,7 @@ private func getaddrinfo(node: String, service: String, hints: addrinfo?) throws
         result = getaddrinfo(node, service, nil, &resolved)
     }
     guard result == 0 else {
-        throw Errno()
+        throw Errno.current
     }
     defer {
         freeaddrinfo(resolved)
