@@ -17,3 +17,11 @@ static inline char * _Nonnull _platform_shims_dirent_d_name(struct dirent * _Non
     return entry->d_name;
 }
 #endif
+
+#if __ANDROID__
+#include <android/log.h>
+
+static inline void android_log(int prio, const char * _Nonnull tag, const char * _Nonnull str) {
+    __android_log_print(prio, tag, "%s", str);
+}
+#endif
