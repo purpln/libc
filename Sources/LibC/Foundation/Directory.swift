@@ -34,14 +34,12 @@ public func getHomeDirectory(for user: String? = nil) -> String? {
 public func getDocumentsDirectory() -> String? {
 #if os(macOS) || os(iOS)
     guard let value = getenv("HOME") else { return nil }
-    return String(cString: value)
+    return String(cString: value) + "/Documents"
 #elseif os(Linux) || os(Android)
-    let id: UnsafeMutablePointer<passwd>? = getpwuid(getuid())
-    guard let dir = id, let pointer = dir.pointee.pw_dir else {
-        return nil
-    }
+    guard let dir: UnsafeMutablePointer<passwd> = getpwuid(getuid()),
+          let pointer = dir.pointee.pw_dir else { return nil }
     return String(cString: pointer)
-#else
+#elseif os(WASI)
     return nil
 #endif
 }

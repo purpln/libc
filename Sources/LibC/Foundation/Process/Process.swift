@@ -1,8 +1,8 @@
 public func processorCoresCount() -> Int {
 #if os(macOS) || os(iOS)
-    var count: Int32 = -1
-    var mib: [Int32] = [CTL_HW, HW_NCPU]
-    var countSize = MemoryLayout<Int32>.size
+    var count: CInt = -1
+    var mib: [CInt] = [CTL_HW, HW_NCPU]
+    var countSize = MemoryLayout<CInt>.size
     let status = sysctl(&mib, UInt32(mib.count), &count, &countSize, nil, 0)
     guard status == 0 else {
         return 0
@@ -13,7 +13,7 @@ public func processorCoresCount() -> Int {
     GetSystemInfo(&siInfo)
     return Int(siInfo.dwNumberOfProcessors)
 #elseif os(Linux) || os(Android)
-    return Int(sysconf(Int32(_SC_NPROCESSORS_CONF)))
+    return Int(sysconf(CInt(_SC_NPROCESSORS_CONF)))
 #else
     return 1
 #endif
@@ -21,9 +21,9 @@ public func processorCoresCount() -> Int {
 
 public func activeCoresCount() -> Int {
 #if os(macOS) || os(iOS)
-    var count: Int32 = -1
-    var mib: [Int32] = [CTL_HW, HW_AVAILCPU]
-    var countSize = MemoryLayout<Int32>.size
+    var count: CInt = -1
+    var mib: [CInt] = [CTL_HW, HW_AVAILCPU]
+    var countSize = MemoryLayout<CInt>.size
     let status = sysctl(&mib, UInt32(mib.count), &count, &countSize, nil, 0)
     guard status == 0 else {
         return 0
@@ -35,7 +35,7 @@ public func activeCoresCount() -> Int {
         return fsCount
     }
 #endif
-    return Int(sysconf(Int32(_SC_NPROCESSORS_ONLN)))
+    return Int(sysconf(CInt(_SC_NPROCESSORS_ONLN)))
 #elseif os(Windows)
     var sysInfo = SYSTEM_INFO()
     GetSystemInfo(&sysInfo)
@@ -64,8 +64,8 @@ public func physicalMemory() -> UInt64 {
     }
     return totalMemoryKB * 1024
 #elseif os(Linux) || os(Android)
-    var memory = sysconf(Int32(_SC_PHYS_PAGES))
-    memory *= sysconf(Int32(_SC_PAGESIZE))
+    var memory = sysconf(CInt(_SC_PHYS_PAGES))
+    memory *= sysconf(CInt(_SC_PAGESIZE))
     return UInt64(memory)
 #else
     return 0

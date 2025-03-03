@@ -13,7 +13,7 @@ public enum FileType: UInt8 {
 extension FileType {
     public init(rawValue: UInt8) {
 #if canImport(Darwin.C) || canImport(Musl) || os(Android)
-        let value = Int32(rawValue)
+        let value = CInt(rawValue)
 #elseif canImport(Glibc)
         let value = Int(rawValue)
 #endif
