@@ -14,37 +14,47 @@ public func setCurrentDirectory(_ path: String) throws(Errno) {
     }).get()
 }
 
-public func getHomeDirectory(for user: String? = nil) -> String? {
-#if !os(WASI)
+public func getHomeDirectory(for user: String?) -> String? {
+#if os(WASI)
+    // WASI does not have user concept
+    return nil
+#else
     let id: UnsafeMutablePointer<passwd>?
     if let user = user {
         id = getpwnam(user)
     } else {
         id = getpwuid(getuid())
     }
-    guard let dir = id, let pointer = dir.pointee.pw_dir else {
+    guard let id = id, let pointer = id.pointee.pw_dir else {
         return nil
     }
     return String(cString: pointer)
-#else
+#endif
+}
+
+public func getHomeDirectory() -> String? {
+#if os(macOS) || os(iOS)
+    guard let value = getenv("HOME") else { return nil }
+    return String(cString: value)
+#elseif os(WASI)
+    // WASI does not have user concept
     return nil
+#else
+    guard let id: UnsafeMutablePointer<passwd> = getpwuid(getuid()),
+          let pointer = id.pointee.pw_dir else { return nil }
+    return String(cString: pointer)
 #endif
 }
 
 public func getDocumentsDirectory() -> String? {
-#if os(macOS) || os(iOS)
-    guard let value = getenv("HOME") else { return nil }
-    return String(cString: value) + "/Documents"
-#elseif os(Linux) || os(Android)
-    guard let dir: UnsafeMutablePointer<passwd> = getpwuid(getuid()),
-          let pointer = dir.pointee.pw_dir else { return nil }
-    return String(cString: pointer)
-#elseif os(WASI)
+#if os(WASI)
     return nil
+#else
+    return getHomeDirectory().map({ $0 + "/Documents" })
 #endif
 }
 
-public func getExecutablePath() -> String? {
+public func getExecutablePath() -> String {
 #if os(macOS) || os(iOS)
     var result: String?
 #if DEBUG
@@ -69,8 +79,13 @@ public func getExecutablePath() -> String? {
         count = readlink("/proc/self/exe", buffer.baseAddress!, capacity)
     }
     return String(decoding: buffer, as: UTF8.self)
+#elseif os(WASI)
+    return CommandLine.arguments.first ?? "/"
 #else
-    return nil
+    var buffer = [WCHAR](repeating: 0, count: Int(MAX_PATH))
+    let result = GetModuleFileNameW(nil, &buffer, DWORD(buffer.count))
+    guard result == 0 else { return "/" }
+    return String(decodingCString: buffer, as: UTF16.self)
 #endif
 }
 
@@ -100,7 +115,7 @@ public func getDirectoryContents(_ path: String) throws(Errno) -> [(name: String
             }
             return String(decoding: buffer, as: UTF8.self)
         }
-#else
+#elseif os(WASI)
         let path = String(cString: _platform_shims_dirent_d_name(entity))
 #endif
         let type = entity.pointee.d_type

@@ -5,7 +5,13 @@
 #include <dirent.h>
 #include <time.h>
 
+static inline int32_t _getConst_DT_UNKNOWN(void) { return DT_UNKNOWN; }
+static inline int32_t _getConst_DT_FIFO(void) { return DT_FIFO; }
+static inline int32_t _getConst_DT_CHR(void) { return DT_CHR; }
 static inline int32_t _getConst_DT_DIR(void) { return DT_DIR; }
+static inline int32_t _getConst_DT_BLK(void) { return DT_BLK; }
+static inline int32_t _getConst_DT_REG(void) { return DT_REG; }
+static inline int32_t _getConst_DT_LNK(void) { return DT_LNK; }
 
 static inline int32_t _getConst_O_ACCMODE(void) { return O_ACCMODE; }
 static inline int32_t _getConst_O_APPEND(void) { return O_APPEND; }

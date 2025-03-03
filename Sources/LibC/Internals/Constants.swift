@@ -446,6 +446,33 @@ internal var _ELAST: CInt { ELAST }
 // MARK: File Operations
 
 @_alwaysEmitIntoClient
+internal var _DT_UNKNOWN: CInt {
+#if os(WASI)
+    _getConst_DT_UNKNOWN()
+#else
+    CInt(DT_UNKNOWN)
+#endif
+}
+
+@_alwaysEmitIntoClient
+internal var _DT_FIFO: CInt {
+#if os(WASI)
+    _getConst_DT_FIFO()
+#else
+    CInt(DT_FIFO)
+#endif
+}
+
+@_alwaysEmitIntoClient
+internal var _DT_CHR: CInt {
+#if os(WASI)
+    _getConst_DT_CHR()
+#else
+    CInt(DT_CHR)
+#endif
+}
+
+@_alwaysEmitIntoClient
 internal var _DT_DIR: CInt {
 #if os(WASI)
     _getConst_DT_DIR()
@@ -453,6 +480,47 @@ internal var _DT_DIR: CInt {
     CInt(DT_DIR)
 #endif
 }
+
+@_alwaysEmitIntoClient
+internal var _DT_BLK: CInt {
+#if os(WASI)
+    _getConst_DT_BLK()
+#else
+    CInt(DT_BLK)
+#endif
+}
+
+@_alwaysEmitIntoClient
+internal var _DT_REG: CInt {
+#if os(WASI)
+    _getConst_DT_REG()
+#else
+    CInt(DT_REG)
+#endif
+}
+
+@_alwaysEmitIntoClient
+internal var _DT_LNK: CInt {
+#if os(WASI)
+    _getConst_DT_LNK()
+#else
+    CInt(DT_LNK)
+#endif
+}
+
+#if !os(WASI)
+@_alwaysEmitIntoClient
+internal var _DT_SOCK: CInt {
+    CInt(DT_SOCK)
+}
+#endif
+
+#if os(macOS) || os(iOS)
+@_alwaysEmitIntoClient
+internal var _DT_WHT: CInt {
+    CInt(DT_WHT)
+}
+#endif
 
 @_alwaysEmitIntoClient
 internal var _O_RDONLY: CInt { O_RDONLY }

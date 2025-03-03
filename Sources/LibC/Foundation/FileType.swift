@@ -12,32 +12,28 @@ public enum FileType: UInt8 {
 
 extension FileType {
     public init(rawValue: UInt8) {
-#if canImport(Darwin.C) || canImport(Musl) || os(Android)
-        let value = CInt(rawValue)
-#elseif canImport(Glibc)
-        let value = Int(rawValue)
-#endif
-        
-        switch value {
-        case DT_FIFO:
+        switch CInt(rawValue) {
+        case _DT_FIFO:
             self = .fifo
-        case DT_CHR:
+        case _DT_CHR:
             self = .character
-        case DT_DIR:
+        case _DT_DIR:
             self = .directory
-        case DT_BLK:
+        case _DT_BLK:
             self = .block
-        case DT_REG:
+        case _DT_REG:
             self = .regular
-        case DT_LNK:
+        case _DT_LNK:
             self = .symlink
-        case DT_SOCK:
+#if !canImport(WASILibc)
+        case _DT_SOCK:
             self = .socket
+#endif
 #if canImport(Darwin.C)
-        case DT_WHT:
+        case _DT_WHT:
             self = .whiteout
 #endif
-        case DT_UNKNOWN:
+        case _DT_UNKNOWN:
             self = .unknown
         default:
             self = .unknown
