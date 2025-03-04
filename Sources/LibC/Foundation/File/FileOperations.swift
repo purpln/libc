@@ -7,21 +7,53 @@ extension FileDescriptor {
         permissions: FilePermissions? = nil,
         retryOnInterrupt: Bool = true
     ) throws -> FileDescriptor {
-#if !os(Windows)
-        try path.withCString {
+#if os(Windows)
+        try path.withPlatformString {
             try FileDescriptor.open(
                 $0, mode, options: options, permissions: permissions, retryOnInterrupt: retryOnInterrupt
             )
         }
 #else
-        try path.withPlatformString {
+        try path.withCString {
             try FileDescriptor.open(
-                $0, mode, options: options, permissions: permissions, retryOnInterrupt: retryOnInterrupt)
+                $0, mode, options: options, permissions: permissions, retryOnInterrupt: retryOnInterrupt
+            )
         }
 #endif
     }
     
-#if !os(Windows)
+#if os(Windows)
+    @_alwaysEmitIntoClient
+    public static func open(
+        _ path: UnsafePointer<CInterop.PlatformChar>,
+        _ mode: FileDescriptor.AccessMode,
+        options: FileDescriptor.OpenOptions = FileDescriptor.OpenOptions(),
+        permissions: FilePermissions? = nil,
+        retryOnInterrupt: Bool = true
+    ) throws(Errno) -> FileDescriptor {
+        try FileDescriptor._open(
+            path, mode, options: options, permissions: permissions, retryOnInterrupt: retryOnInterrupt
+        ).get()
+    }
+    
+    @usableFromInline
+    internal static func _open(
+        _ path: UnsafePointer<CInterop.PlatformChar>,
+        _ mode: FileDescriptor.AccessMode,
+        options: FileDescriptor.OpenOptions,
+        permissions: FilePermissions?,
+        retryOnInterrupt: Bool
+    ) -> Result<FileDescriptor, Errno> {
+        let oFlag = mode.rawValue | options.rawValue
+        let descOrError: Result<CInt, Errno> = valueOrErrno(retryOnInterrupt: retryOnInterrupt) {
+            if let permissions = permissions {
+                return system_open(path, oFlag, permissions.rawValue)
+            }
+            return system_open(path, oFlag)
+        }
+        return descOrError.map { FileDescriptor(rawValue: $0) }
+    }
+#else
     @_alwaysEmitIntoClient
     public static func open(
         _ path: UnsafePointer<CChar>,
@@ -49,37 +81,6 @@ extension FileDescriptor {
                 return system_open(path, oFlag, permissions.rawValue)
             }
             precondition(!options.contains(.create), "Create must be given permissions")
-            return system_open(path, oFlag)
-        }
-        return descOrError.map { FileDescriptor(rawValue: $0) }
-    }
-#else
-    @_alwaysEmitIntoClient
-    public static func open(
-        _ path: UnsafePointer<CInterop.PlatformChar>,
-        _ mode: FileDescriptor.AccessMode,
-        options: FileDescriptor.OpenOptions = FileDescriptor.OpenOptions(),
-        permissions: FilePermissions? = nil,
-        retryOnInterrupt: Bool = true
-    ) throws(Errno) -> FileDescriptor {
-        try FileDescriptor._open(
-            path, mode, options: options, permissions: permissions, retryOnInterrupt: retryOnInterrupt
-        ).get()
-    }
-    
-    @usableFromInline
-    internal static func _open(
-        _ path: UnsafePointer<CInterop.PlatformChar>,
-        _ mode: FileDescriptor.AccessMode,
-        options: FileDescriptor.OpenOptions,
-        permissions: FilePermissions?,
-        retryOnInterrupt: Bool
-    ) -> Result<FileDescriptor, Errno> {
-        let oFlag = mode.rawValue | options.rawValue
-        let descOrError: Result<CInt, Errno> = valueOrErrno(retryOnInterrupt: retryOnInterrupt) {
-            if let permissions = permissions {
-                return system_open(path, oFlag, permissions.rawValue)
-            }
             return system_open(path, oFlag)
         }
         return descOrError.map { FileDescriptor(rawValue: $0) }

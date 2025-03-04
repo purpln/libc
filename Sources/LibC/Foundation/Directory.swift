@@ -125,40 +125,45 @@ public func getDirectoryContents(_ path: String) throws(Errno) -> [(name: String
 }
 
 public func exists(path: String) -> Bool {
-    var s = stat()
-    if lstat(path, &s) >= 0 {
-#if os(Android) && _pointerBitWidth(_32)
-        if (UInt16(s.st_mode) & S_IFMT) == S_IFLNK {
-            if (UInt16(s.st_mode) & S_ISVTX) == S_ISVTX {
-                return true
-            }
-            stat(path, &s)
-        }
-#else
-        // don't chase the link for this magic case -- we might be /Net/foo
-        // which is a symlink to /private/Net/foo which is not yet mounted...
-        if (s.st_mode & S_IFMT) == S_IFLNK {
-            if (s.st_mode & S_ISVTX) == S_ISVTX {
-                return true
-            }
-            // chase the link; too bad if it is a slink to /Net/foo
-            stat(path, &s)
-        }
-#endif
-    } else {
-        return false
+    func system_lstat(_ path: String) throws(Errno) -> stat {
+        var info = stat()
+        try nothingOrErrno(retryOnInterrupt: false, {
+            lstat(path, &info)
+        }).get()
+        return info
     }
-    return true
+    
+    func system_stat(_ path: String) throws(Errno) -> stat {
+        var info = stat()
+        try nothingOrErrno(retryOnInterrupt: false, {
+            stat(path, &info)
+        }).get()
+        return info
+    }
+    
+    guard let info = try? system_lstat(path) else { return false }
+    // don't chase the link for this magic case -- we might be /Net/foo
+    // which is a symlink to /private/Net/foo which is not yet mounted...
+    guard (mode_t(info.st_mode) & S_IFMT) == S_IFLNK,
+          (mode_t(info.st_mode) & S_ISVTX) != S_ISVTX else { return true }
+    // chase the link; too bad if it is a slink to /Net/foo
+    return (try? system_stat(path)) != nil
 }
 
-public func createDirectory(_ path: String) throws(Errno) {
+public func createDirectory(_ path: String, permissions: FilePermissions) throws(Errno) {
     try nothingOrErrno(retryOnInterrupt: false, {
-        system_mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)
+        system_mkdir(path, permissions.rawValue)
     }).get()
 }
 
 public func removeDirectory(_ path: String) throws(Errno) {
     try nothingOrErrno(retryOnInterrupt: false, {
         system_rmdir(path)
+    }).get()
+}
+
+public func symbolic(link path: String, original: String) throws(Errno) {
+    try nothingOrErrno(retryOnInterrupt: false, {
+        symlink(original, path)
     }).get()
 }

@@ -117,7 +117,7 @@ public func system_open(
 public func system_open(
     _ path: UnsafePointer<CChar>,
     _ oflag: CInt,
-    _ mode: mode_t
+    _ mode: PlatformMode
 ) -> CInt {
     open(path, oflag, mode)
 }
@@ -238,14 +238,13 @@ public func system_confstr(
 #endif
 
 #if !os(Windows)
-internal let SYSTEM_AT_REMOVE_DIR = AT_REMOVEDIR
-internal let SYSTEM_DT_DIR = _DT_DIR
-internal typealias system_dirent = dirent
+
 #if os(Linux) || os(Android) || os(WASI)
 public typealias system_DIRPtr = OpaquePointer
 #else
 public typealias system_DIRPtr = UnsafeMutablePointer<DIR>
 #endif
+
 #if canImport(Android) || os(WASI)
 public typealias system_FILEPtr = OpaquePointer
 #else
