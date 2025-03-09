@@ -129,6 +129,13 @@ public func system_close(
     close(descriptor)
 }
 
+// remove
+public func system_remove(
+    _ path: UnsafePointer<CChar>
+) -> CInt {
+    remove(path)
+}
+
 // read
 public func system_read(
     _ descriptor: CInt,
