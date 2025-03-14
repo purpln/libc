@@ -67,6 +67,26 @@ public extension timeval {
     }
 }
 
+public extension timespec {
+    static func + (lhs: timespec, rhs: Double) -> timespec {
+        lhs + timespec(interval: rhs)
+    }
+    
+    static func - (lhs: timespec, rhs: Double) -> timespec {
+        lhs - timespec(interval: rhs)
+    }
+}
+
+public extension timeval {
+    static func + (lhs: timeval, rhs: Double) -> timeval {
+        lhs + timeval(interval: rhs)
+    }
+    
+    static func - (lhs: timeval, rhs: Double) -> timeval {
+        lhs - timeval(interval: rhs)
+    }
+}
+
 #if hasFeature(RetroactiveAttribute)
 extension timespec: @retroactive Equatable {}
 extension timespec: @retroactive Comparable {}
