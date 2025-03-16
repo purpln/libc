@@ -167,3 +167,43 @@ public func symbolic(link path: String, original: String) throws(Errno) {
         symlink(original, path)
     }).get()
 }
+
+public func read(path: String) throws -> [UInt8] {
+    let allocator = Allocator(open: {
+        try FileDescriptor.open(path, .readOnly)
+    }, close: { descriptor in
+        try descriptor.close()
+    })
+    let pointer = try allocator.allocate()
+    
+    var result = [UInt8]()
+    
+    while true {
+        let bytes = try [UInt8](unsafeUninitializedCapacity: 4096, initializingWith: { buffer, count in
+            count = try pointer.read(into: UnsafeMutableRawBufferPointer(buffer))
+        })
+        if bytes.isEmpty { break }
+        result.append(contentsOf: bytes)
+    }
+    
+    return result
+}
+
+public func write(path: String, bytes: [UInt8]) throws {
+    let allocator = Allocator(open: {
+        try FileDescriptor.open(path, .writeOnly, options: [.create, .truncate], permissions: .ownerReadWriteExecute)
+    }, close: { descriptor in
+        try descriptor.close()
+    })
+    let pointer = try allocator.allocate()
+    
+    let count = bytes.count
+    var result = 0
+    
+    while true {
+        result += try bytes.withUnsafeBufferPointer({
+            try pointer.write(UnsafeRawBufferPointer($0))
+        })
+        if result == count { break }
+    }
+}
