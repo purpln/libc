@@ -441,7 +441,6 @@ internal var _EQFULL: CInt { EQFULL }
 internal var _ELAST: CInt { ELAST }
 #endif
 
-// MARK: File Operations
 #if !os(Windows)
 @_alwaysEmitIntoClient
 internal var _DT_UNKNOWN: CInt {
@@ -534,7 +533,6 @@ internal var _O_RDWR: CInt { O_RDWR }
 #if canImport(Musl)
 internal var _O_ACCMODE: CInt { 0x03|O_SEARCH }
 #else
-// TODO: API?
 @_alwaysEmitIntoClient
 internal var _O_ACCMODE: CInt {
 #if os(WASI)
@@ -574,7 +572,6 @@ internal var _O_EXLOCK: CInt { O_EXLOCK }
 
 #if !os(Windows)
 #if !os(WASI)
-// TODO: API?
 @_alwaysEmitIntoClient
 internal var _O_ASYNC: CInt { O_ASYNC }
 #endif
@@ -624,7 +621,6 @@ internal var _O_EVTONLY: CInt { O_EVTONLY }
 #endif
 
 #if !os(Windows)
-// TODO: API?
 @_alwaysEmitIntoClient
 internal var _O_NOCTTY: CInt { O_NOCTTY }
 

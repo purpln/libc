@@ -97,7 +97,7 @@ extension SystemString {
     fileprivate func _invariantCheck() {
 #if DEBUG
         precondition(_invariantsSatisfied())
-#endif // DEBUG
+#endif
     }
 }
 
