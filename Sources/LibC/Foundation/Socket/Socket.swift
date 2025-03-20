@@ -66,7 +66,7 @@ extension sockaddr_un {
 }
 
 extension sockaddr_storage {
-    private static var size: Int {
+    public static var size: Int {
         MemoryLayout<sockaddr_storage>.size
     }
 }
