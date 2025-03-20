@@ -1,4 +1,61 @@
 #if os(Windows)
+@inline(__always)
+internal func socket(
+    _ family: CInt,
+    _ type: CInt,
+    _ protocol: CInt
+) -> CInt {
+    CInt(socket(family, type, `protocol`) as SOCKET)
+}
+
+@inline(__always)
+internal func inet_ntop(
+    _ family: CInt,
+    _ address: UnsafeRawPointer?,
+    _ value: UnsafeMutablePointer<CChar>?,
+    _ length: socklen_t
+) -> UnsafePointer<CChar>? {
+    inet_ntop(family, address, value, Int(length))
+}
+
+@inline(__always)
+internal func getsockopt(
+    _ descriptor: CInt,
+    _ level: CInt,
+    _ name: CInt,
+    _ value: UnsafeMutablePointer<CChar>?,
+    _ length: UnsafeMutablePointer<socklen_t>?
+) -> CInt {
+    getsockopt(SOCKET(descriptor), level, name, value, length)
+}
+@inline(__always)
+internal func setsockopt(
+    _ descriptor: CInt,
+    _ level: CInt,
+    _ name: CInt,
+    _ value: UnsafePointer<CChar>?,
+    _ length: socklen_t
+) -> CInt {
+    setsockopt(SOCKET(descriptor), level, name, value, length)
+}
+
+@inline(__always)
+internal func getsockname(
+    _ descriptor: CInt,
+    _ name: UnsafeMutablePointer<sockaddr>?,
+    _ length: UnsafeMutablePointer<socklen_t>?
+) -> CInt {
+    getsockname(SOCKET(descriptor), name, length)
+}
+
+@inline(__always)
+internal func getpeername(
+    _ descriptor: CInt,
+    _ name: UnsafeMutablePointer<sockaddr>?,
+    _ length: UnsafeMutablePointer<socklen_t>?
+) -> CInt {
+    getpeername(SOCKET(descriptor), name, length)
+}
 
 @inline(__always)
 internal func accept(
@@ -6,7 +63,7 @@ internal func accept(
     _ address: UnsafeMutablePointer<sockaddr>?,
     _ length: UnsafeMutablePointer<socklen_t>?
 ) -> CInt {
-    CInt(accept(SOCKET(descriptor), address!, length))
+    CInt(accept(SOCKET(descriptor), address, length))
 }
 
 @inline(__always)
@@ -15,7 +72,7 @@ internal func bind(
     _ address: UnsafePointer<sockaddr>?,
     _ length: socklen_t
 ) -> CInt {
-    bind(SOCKET(descriptor), address!, length)
+    bind(SOCKET(descriptor), address, length)
 }
 
 @inline(__always)
@@ -24,7 +81,7 @@ internal func connect(
     _ address: UnsafePointer<sockaddr>?,
     _ length: socklen_t
 ) -> CInt {
-    connect(SOCKET(descriptor), address!, length)
+    connect(SOCKET(descriptor), address, length)
 }
 
 @inline(__always)

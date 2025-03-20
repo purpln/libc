@@ -1,5 +1,5 @@
 public var environment: [String: String] {
-#if os(macOS) || os(iOS) || os(Linux) || os(Android) || os(WASI)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS) || os(Linux) || os(Android) || os(WASI)
     return parse(environ: environ)
 #elseif os(Windows)
     return parseWindowsEnvironment()
@@ -24,7 +24,7 @@ internal func split(row: String) -> (key: String, value: String)? {
     }
 }
 
-#if os(macOS) || os(iOS) || os(Linux) || os(Android) || os(WASI)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS) || os(Linux) || os(Android) || os(WASI)
 @inlinable
 internal func parse(environ: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>) -> [String: String] {
     var result = [String: String]()

@@ -253,7 +253,7 @@ internal var _EHOSTUNREACH: CInt { EHOSTUNREACH }
 @_alwaysEmitIntoClient
 internal var _ENOTEMPTY: CInt { ENOTEMPTY }
 
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
 @_alwaysEmitIntoClient
 internal var _EPROCLIM: CInt { EPROCLIM }
 #endif
@@ -298,7 +298,7 @@ internal var _EREMOTE: CInt {
 }
 #endif
 
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
 @_alwaysEmitIntoClient
 internal var _EBADRPC: CInt { EBADRPC }
 
@@ -321,7 +321,7 @@ internal var _ENOLCK: CInt { ENOLCK }
 @_alwaysEmitIntoClient
 internal var _ENOSYS: CInt { ENOSYS }
 
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
 @_alwaysEmitIntoClient
 internal var _EFTYPE: CInt { EFTYPE }
 
@@ -332,7 +332,7 @@ internal var _EAUTH: CInt { EAUTH }
 internal var _ENEEDAUTH: CInt { ENEEDAUTH }
 #endif
 
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
 @_alwaysEmitIntoClient
 internal var _EPWROFF: CInt { EPWROFF }
 
@@ -345,7 +345,7 @@ internal var _EDEVERR: CInt { EDEVERR }
 internal var _EOVERFLOW: CInt { EOVERFLOW }
 #endif
 
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
 @_alwaysEmitIntoClient
 internal var _EBADEXEC: CInt { EBADEXEC }
 
@@ -373,7 +373,7 @@ internal var _ENOMSG: CInt { ENOMSG }
 @_alwaysEmitIntoClient
 internal var _EILSEQ: CInt { EILSEQ }
 
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
 @_alwaysEmitIntoClient
 internal var _ENOATTR: CInt { ENOATTR }
 #endif
@@ -420,7 +420,7 @@ internal var _EOPNOTSUPP: CInt {
 #endif
 }
 
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
 @_alwaysEmitIntoClient
 internal var _ENOPOLICY: CInt { ENOPOLICY }
 #endif
@@ -433,12 +433,10 @@ internal var _ENOTRECOVERABLE: CInt { ENOTRECOVERABLE }
 internal var _EOWNERDEAD: CInt { EOWNERDEAD }
 #endif
 
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
 @_alwaysEmitIntoClient
 internal var _EQFULL: CInt { EQFULL }
-#endif
 
-#if os(macOS) || os(iOS)
 @_alwaysEmitIntoClient
 internal var _ELAST: CInt { ELAST }
 #endif
@@ -515,7 +513,7 @@ internal var _DT_SOCK: CInt {
 }
 #endif
 
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
 @_alwaysEmitIntoClient
 internal var _DT_WHT: CInt {
     CInt(DT_WHT)
@@ -566,7 +564,7 @@ internal var _O_APPEND: CInt {
 #endif
 }
 
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
 @_alwaysEmitIntoClient
 internal var _O_SHLOCK: CInt { O_SHLOCK }
 
@@ -620,7 +618,7 @@ internal var _O_EXCL: CInt {
 #endif
 }
 
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
 @_alwaysEmitIntoClient
 internal var _O_EVTONLY: CInt { O_EVTONLY }
 #endif
@@ -640,7 +638,7 @@ internal var _O_DIRECTORY: CInt {
 }
 #endif
 
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
 @_alwaysEmitIntoClient
 internal var _O_SYMLINK: CInt { O_SYMLINK }
 #endif
@@ -659,7 +657,7 @@ internal var _SEEK_CUR: CInt { SEEK_CUR }
 @_alwaysEmitIntoClient
 internal var _SEEK_END: CInt { SEEK_END }
 
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
 @_alwaysEmitIntoClient
 internal var _SEEK_HOLE: CInt { SEEK_HOLE }
 

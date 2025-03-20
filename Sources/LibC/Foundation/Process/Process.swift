@@ -1,5 +1,5 @@
 public func processorCoresCount() -> Int {
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
     var count: CInt = -1
     var mib: [CInt] = [CTL_HW, HW_NCPU]
     var countSize = MemoryLayout<CInt>.size
@@ -20,7 +20,7 @@ public func processorCoresCount() -> Int {
 }
 
 public func activeCoresCount() -> Int {
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
     var count: CInt = -1
     var mib: [CInt] = [CTL_HW, HW_AVAILCPU]
     var countSize = MemoryLayout<CInt>.size
@@ -46,7 +46,7 @@ public func activeCoresCount() -> Int {
 }
 
 public func physicalMemory() -> UInt64 {
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
     var memory: UInt64 = 0
     var memorySize = MemoryLayout<UInt64>.size
     let name = "hw.memsize"
@@ -97,7 +97,7 @@ public func hostname() -> String {
 }
 
 public func operatingSystemVersion() throws -> (major: Int, minor: Int, patch: Int, build: String?) {
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(Linux) || os(Android)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS) || os(Linux) || os(Android) || os(WASI)
     var uts: utsname = utsname()
     try nothingOrErrno(retryOnInterrupt: false, {
         uname(&uts)
@@ -129,13 +129,11 @@ public func operatingSystemVersion() throws -> (major: Int, minor: Int, patch: I
         patch: Int(osVersionInfo.dwBuildNumber),
         build: nil
     )
-#elseif os(WASI)
-    return (major: 0, minor: 0, patch: 0, build: nil)
 #endif
 }
 
 public func operatingSystemVersionString() throws -> String {
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
     var (platform, version) = try readOSRelease()
     
     if version.major != -1 {

@@ -1,5 +1,5 @@
 public func getHomeDirectory() -> String? {
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
     getenv("HOME")
 #elseif os(WASI)
     // WASI does not have user concept
@@ -34,7 +34,7 @@ public func getDocumentsDirectory() -> String? {
 }
 
 public func getExecutablePath() throws -> String {
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
     var result: String?
 #if DEBUG
     var capacity = UInt32(1) // force looping
@@ -106,7 +106,7 @@ public func getDirectoryContents(_ path: String) throws(Errno) -> [Content] {
 #if !os(WASI)
         let name = withUnsafePointer(to: entity.pointee.d_name) { pointer -> String in
             let buffer = pointer.withMemoryRebound(to: UInt8.self, capacity: Int(entity.pointee.d_reclen)) { pointer  in
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
                 [UInt8](UnsafeBufferPointer(start: pointer, count: Int(entity.pointee.d_namlen)))
 #elseif os(Linux) || os(Android)
                 [UInt8](UnsafeBufferPointer(start: pointer, count: strlen(pointer)))
@@ -120,7 +120,7 @@ public func getDirectoryContents(_ path: String) throws(Errno) -> [Content] {
         let info = try system_stat("\(path)/\(name)")
         let type = FileType(rawValue: entity.pointee.d_type)
         let size = UInt64(info.st_size)
-#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
         let create = info.st_birthtimespec
         let modify = info.st_mtimespec
         let access = info.st_atimespec

@@ -1,11 +1,9 @@
 #if os(Windows)
 private typealias Family = UInt16
 private typealias Port = UInt16
-private typealias Length = Int
 #else
 private typealias Family = sa_family_t
 private typealias Port = in_port_t
-private typealias Length = socklen_t
 #endif
 
 extension in_addr {
@@ -289,24 +287,27 @@ extension in6_addr: CustomStringConvertible {}
 
 extension in_addr {
     public var description: String {
-        var bytes = [UInt8](repeating: 0, count: Int(INET_ADDRSTRLEN))
+        var bytes = [CChar](repeating: 0, count: Int(INET_ADDRSTRLEN))
         var addr = self
-        guard inet_ntop(AF_INET, &addr, &bytes, Length(INET_ADDRSTRLEN)) != nil else { return "" }
-        return String(decoding: bytes, as: UTF8.self)
+        guard system_inet_ntop(AF_INET, &addr, &bytes, socklen_t(INET_ADDRSTRLEN)) != nil else {
+            return ""
+        }
+        return bytes.withUnsafeBufferPointer({
+            String(cString: $0.baseAddress!)
+        })
     }
 }
 
 extension in6_addr {
     public var description: String {
-        var bytes = [UInt8](repeating: 0, count: Int(INET6_ADDRSTRLEN))
+        var bytes = [CChar](repeating: 0, count: Int(INET6_ADDRSTRLEN))
         var addr = self
-        guard
-            inet_ntop(AF_INET6, &addr, &bytes, Length(INET6_ADDRSTRLEN))
-                != nil
-        else {
+        guard system_inet_ntop(AF_INET6, &addr, &bytes, socklen_t(INET6_ADDRSTRLEN)) != nil else {
             return ""
         }
-        return String(decoding: bytes, as: UTF8.self)
+        return bytes.withUnsafeBufferPointer({
+            String(cString: $0.baseAddress!)
+        })
     }
 }
 

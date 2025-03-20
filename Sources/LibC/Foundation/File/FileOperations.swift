@@ -308,11 +308,11 @@ extension FilePermissions {
     internal static var creationMask: FilePermissions {
         get {
             let oldMask = _umask(0o22)
-            _ = _umask(oldMask)
+            _umask(oldMask)
             return FilePermissions(rawValue: oldMask)
         }
         set {
-            _ = _umask(newValue.rawValue)
+            _umask(newValue.rawValue)
         }
     }
     
@@ -322,11 +322,12 @@ extension FilePermissions {
     ) rethrows -> R {
         let oldMask = _umask(permissions.rawValue)
         defer {
-            _ = _umask(oldMask)
+            _umask(oldMask)
         }
         return try body()
     }
     
+    @discardableResult
     internal static func _umask(_ mode: PlatformMode) -> PlatformMode {
         return system_umask(mode)
     }

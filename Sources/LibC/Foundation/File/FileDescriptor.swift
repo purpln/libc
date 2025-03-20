@@ -5,7 +5,7 @@ public struct FileDescriptor: RawRepresentable, Sendable, Equatable, Hashable {
         self.rawValue = rawValue
     }
 }
-#if !os(Windows)
+
 public extension FileDescriptor {
     @inlinable
     static var input: FileDescriptor  { FileDescriptor(rawValue: STDIN_FILENO) }
@@ -17,18 +17,6 @@ public extension FileDescriptor {
     static var error: FileDescriptor  { FileDescriptor(rawValue: STDERR_FILENO) }
 }
 
-public extension FileDescriptor {
-    var flags: CInt {
-        get { fcntl(rawValue, F_GETFD, 0) }
-        nonmutating set { _ = fcntl(rawValue, F_SETFD, newValue) }
-    }
-    
-    var status: CInt {
-        get { fcntl(rawValue, F_GETFL, 0) }
-        nonmutating set { _ = fcntl(rawValue, F_SETFL, newValue) }
-    }
-}
-#endif
 extension FileDescriptor {
     @frozen
     public struct AccessMode: RawRepresentable, Sendable, Hashable, Codable {
@@ -73,7 +61,7 @@ extension FileDescriptor {
         @_alwaysEmitIntoClient
         public static var exclusiveCreate: OpenOptions { .init(rawValue: _O_EXCL) }
         
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
         @_alwaysEmitIntoClient
         public static var sharedLock: OpenOptions { .init(rawValue: _O_SHLOCK) }
         
@@ -94,7 +82,7 @@ extension FileDescriptor {
         public static var sync: OpenOptions { .init(rawValue: _O_SYNC) }
 #endif
         
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
         @_alwaysEmitIntoClient
         public static var symlink: OpenOptions { .init(rawValue: _O_SYMLINK) }
         
@@ -125,7 +113,7 @@ extension FileDescriptor {
         @_alwaysEmitIntoClient
         public static var end: SeekOrigin { SeekOrigin(rawValue: SEEK_END) }
         
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
         @_alwaysEmitIntoClient
         public static var nextHole: SeekOrigin { SeekOrigin(rawValue: SEEK_HOLE) }
         
@@ -155,7 +143,7 @@ extension FileDescriptor.SeekOrigin: CustomStringConvertible {
         case .start: return "start"
         case .current: return "current"
         case .end: return "end"
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
         case .nextHole: return "nextHole"
         case .nextData: return "nextData"
 #endif
@@ -168,7 +156,7 @@ extension FileDescriptor.OpenOptions: CustomStringConvertible {
     /// A textual representation of the open options.
     @inline(never)
     public var description: String {
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
         let descriptions: [(Element, StaticString)] = [
             (.nonBlocking, ".nonBlocking"),
             (.append, ".append"),
