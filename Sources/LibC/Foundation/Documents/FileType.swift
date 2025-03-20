@@ -1,4 +1,4 @@
-public enum FileType: UInt8 {
+public enum FileType {
     case regular
     case block
     case character
@@ -11,6 +11,7 @@ public enum FileType: UInt8 {
 }
 
 extension FileType {
+#if !os(Windows)
     public init(rawValue: UInt8) {
         switch CInt(rawValue) {
         case _DT_FIFO:
@@ -39,8 +40,8 @@ extension FileType {
             self = .unknown
         }
     }
+#endif
 }
-
 extension FileType: CustomStringConvertible {
     public var description: String {
         switch self {

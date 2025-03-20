@@ -132,7 +132,7 @@ public extension Errno {
     //Too many open files
     @inlinable
     static var tooManyOpened: Errno { Errno(rawValue: _EMFILE) }
-    
+#if !os(Windows)
     //Inappropriate ioctl for device
     @inlinable
     static var inappropriate: Errno { Errno(rawValue: _ENOTTY) }
@@ -140,7 +140,7 @@ public extension Errno {
     //Text file busy
     @inlinable
     static var textFileBusy: Errno { Errno(rawValue: _ETXTBSY) }
-    
+#endif
     //File too large
     @inlinable
     static var tooLarge: Errno { Errno(rawValue: _EFBIG) }
@@ -364,9 +364,11 @@ public extension Errno {
     @inlinable
     static var device: Errno { Errno(rawValue: _EDEVERR) }
 #endif
+#if !os(Windows)
     //Value too large to be stored in data type
     @inlinable
     static var overflow: Errno { Errno(rawValue: _EOVERFLOW) }
+#endif
 #if os(macOS) || os(iOS)
     //Bad executable (or shared library)
     @inlinable
@@ -387,7 +389,7 @@ public extension Errno {
     //Operation canceled
     @inlinable
     static var canceled: Errno { Errno(rawValue: _ECANCELED) }
-    
+#if !os(Windows)
     //Identifier removed
     @inlinable
     static var removedIdentifier: Errno { Errno(rawValue: _EIDRM) }
@@ -395,7 +397,7 @@ public extension Errno {
     //No message of desired type
     @inlinable
     static var noMessage: Errno { Errno(rawValue: _ENOMSG) }
-    
+#endif
     //Illegal byte sequence
     @inlinable
     static var illegalSequence: Errno { Errno(rawValue: _EILSEQ) }
@@ -404,7 +406,9 @@ public extension Errno {
     @inlinable
     static var noAttribute: Errno { Errno(rawValue: _ENOATTR) }
 #endif
+#if !os(Windows)
     //Bad message
     @inlinable
     static var badMessage: Errno { Errno(rawValue: _EBADMSG) }
+#endif
 }

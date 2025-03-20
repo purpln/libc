@@ -110,9 +110,9 @@ internal var _EAGAIN: CInt { EAGAIN }
 @_alwaysEmitIntoClient
 internal var _EWOULDBLOCK: CInt {
 #if os(WASI)
-  _getConst_EWOULDBLOCK()
+    _getConst_EWOULDBLOCK()
 #else
-  EWOULDBLOCK
+    EWOULDBLOCK
 #endif
 }
 
@@ -144,9 +144,9 @@ internal var _EPROTONOSUPPORT: CInt { EPROTONOSUPPORT }
 @_alwaysEmitIntoClient
 internal var _ESOCKTNOSUPPORT: CInt {
 #if os(Windows)
-  return WSAESOCKTNOSUPPORT
+    return WSAESOCKTNOSUPPORT
 #else
-  return ESOCKTNOSUPPORT
+    return ESOCKTNOSUPPORT
 #endif
 }
 #endif
@@ -154,9 +154,9 @@ internal var _ESOCKTNOSUPPORT: CInt {
 @_alwaysEmitIntoClient
 internal var _ENOTSUP: CInt {
 #if os(Windows)
-  return WSAEOPNOTSUPP
+    return WSAEOPNOTSUPP
 #else
-  return ENOTSUP
+    return ENOTSUP
 #endif
 }
 
@@ -164,9 +164,9 @@ internal var _ENOTSUP: CInt {
 @_alwaysEmitIntoClient
 internal var _EPFNOSUPPORT: CInt {
 #if os(Windows)
-  return WSAEPFNOSUPPORT
+    return WSAEPFNOSUPPORT
 #else
-  return EPFNOSUPPORT
+    return EPFNOSUPPORT
 #endif
 }
 #endif
@@ -208,18 +208,18 @@ internal var _ENOTCONN: CInt { ENOTCONN }
 @_alwaysEmitIntoClient
 internal var _ESHUTDOWN: CInt {
 #if os(Windows)
-  return WSAESHUTDOWN
+    return WSAESHUTDOWN
 #else
-  return ESHUTDOWN
+    return ESHUTDOWN
 #endif
 }
 
 @_alwaysEmitIntoClient
 internal var _ETOOMANYREFS: CInt {
 #if os(Windows)
-  return WSAETOOMANYREFS
+    return WSAETOOMANYREFS
 #else
-  return ETOOMANYREFS
+    return ETOOMANYREFS
 #endif
 }
 #endif
@@ -240,9 +240,9 @@ internal var _ENAMETOOLONG: CInt { ENAMETOOLONG }
 @_alwaysEmitIntoClient
 internal var _EHOSTDOWN: CInt {
 #if os(Windows)
-  return WSAEHOSTDOWN
+    return WSAEHOSTDOWN
 #else
-  return EHOSTDOWN
+    return EHOSTDOWN
 #endif
 }
 #endif
@@ -262,9 +262,9 @@ internal var _EPROCLIM: CInt { EPROCLIM }
 @_alwaysEmitIntoClient
 internal var _EUSERS: CInt {
 #if os(Windows)
-  return WSAEUSERS
+    return WSAEUSERS
 #else
-  return EUSERS
+    return EUSERS
 #endif
 }
 #endif
@@ -272,18 +272,18 @@ internal var _EUSERS: CInt {
 @_alwaysEmitIntoClient
 internal var _EDQUOT: CInt {
 #if os(Windows)
-  return WSAEDQUOT
+    return WSAEDQUOT
 #else
-  return EDQUOT
+    return EDQUOT
 #endif
 }
 
 @_alwaysEmitIntoClient
 internal var _ESTALE: CInt {
 #if os(Windows)
-  return WSAESTALE
+    return WSAESTALE
 #else
-  return ESTALE
+    return ESTALE
 #endif
 }
 
@@ -291,9 +291,9 @@ internal var _ESTALE: CInt {
 @_alwaysEmitIntoClient
 internal var _EREMOTE: CInt {
 #if os(Windows)
-  return WSAEREMOTE
+    return WSAEREMOTE
 #else
-  return EREMOTE
+    return EREMOTE
 #endif
 }
 #endif
@@ -414,9 +414,9 @@ internal var _ETIME: CInt { ETIME }
 @_alwaysEmitIntoClient
 internal var _EOPNOTSUPP: CInt {
 #if os(WASI)
-  _getConst_EOPNOTSUPP()
+    _getConst_EOPNOTSUPP()
 #else
-  EOPNOTSUPP
+    EOPNOTSUPP
 #endif
 }
 
@@ -444,7 +444,7 @@ internal var _ELAST: CInt { ELAST }
 #endif
 
 // MARK: File Operations
-
+#if !os(Windows)
 @_alwaysEmitIntoClient
 internal var _DT_UNKNOWN: CInt {
 #if os(WASI)
@@ -521,6 +521,7 @@ internal var _DT_WHT: CInt {
     CInt(DT_WHT)
 }
 #endif
+#endif //!os(Windows)
 
 @_alwaysEmitIntoClient
 internal var _O_RDONLY: CInt { O_RDONLY }
@@ -539,9 +540,9 @@ internal var _O_ACCMODE: CInt { 0x03|O_SEARCH }
 @_alwaysEmitIntoClient
 internal var _O_ACCMODE: CInt {
 #if os(WASI)
-  _getConst_O_ACCMODE()
+    _getConst_O_ACCMODE()
 #else
-  O_ACCMODE
+    O_ACCMODE
 #endif
 }
 #endif
@@ -549,9 +550,9 @@ internal var _O_ACCMODE: CInt {
 @_alwaysEmitIntoClient
 internal var _O_NONBLOCK: CInt {
 #if os(WASI)
-  _getConst_O_NONBLOCK()
+    _getConst_O_NONBLOCK()
 #else
-  O_NONBLOCK
+    O_NONBLOCK
 #endif
 }
 #endif
@@ -559,9 +560,9 @@ internal var _O_NONBLOCK: CInt {
 @_alwaysEmitIntoClient
 internal var _O_APPEND: CInt {
 #if os(WASI)
-  _getConst_O_APPEND()
+    _getConst_O_APPEND()
 #else
-  O_APPEND
+    O_APPEND
 #endif
 }
 
@@ -595,27 +596,27 @@ internal var _O_SYNC: CInt { O_SYNC }
 @_alwaysEmitIntoClient
 internal var _O_CREAT: CInt {
 #if os(WASI)
-  _getConst_O_CREAT()
+    _getConst_O_CREAT()
 #else
-  O_CREAT
+    O_CREAT
 #endif
 }
 
 @_alwaysEmitIntoClient
 internal var _O_TRUNC: CInt {
 #if os(WASI)
-  _getConst_O_TRUNC()
+    _getConst_O_TRUNC()
 #else
-  O_TRUNC
+    O_TRUNC
 #endif
 }
 
 @_alwaysEmitIntoClient
 internal var _O_EXCL: CInt {
 #if os(WASI)
-  _getConst_O_EXCL()
+    _getConst_O_EXCL()
 #else
-  O_EXCL
+    O_EXCL
 #endif
 }
 
@@ -632,9 +633,9 @@ internal var _O_NOCTTY: CInt { O_NOCTTY }
 @_alwaysEmitIntoClient
 internal var _O_DIRECTORY: CInt {
 #if os(WASI)
-  _getConst_O_DIRECTORY()
+    _getConst_O_DIRECTORY()
 #else
-  O_DIRECTORY
+    O_DIRECTORY
 #endif
 }
 #endif
@@ -666,6 +667,7 @@ internal var _SEEK_HOLE: CInt { SEEK_HOLE }
 internal var _SEEK_DATA: CInt { SEEK_DATA }
 #endif
 
+#if !os(Windows)
 @_alwaysEmitIntoClient
 internal var _CLOCK_MONOTONIC: clockid_t {
 #if os(WASI)
@@ -683,3 +685,4 @@ internal var _CLOCK_REALTIME: clockid_t {
     CLOCK_REALTIME
 #endif
 }
+#endif //!os(Windows)

@@ -1,38 +1,35 @@
-#if os(macOS) || os(iOS)
-private func getSysCtlString(_ name: String) -> String? {
-    withUnsafeTemporaryAllocation(byteCount: 256, alignment: 16) { buffer in
-        
-        var len = buffer.count
-        
-        nothingOrErrno(retryOnInterrupt: false, {
-            sysctlbyname(name, buffer.baseAddress, &len, nil, 0)
-        })
-        
-        return String(validatingCString: buffer.baseAddress!.assumingMemoryBound(to: CChar.self))
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(visionOS)
+private func getSysCtlString(_ name: String) throws -> String {
+    let bytes = try [UInt8](unsafeUninitializedCapacity: 1024) { buffer, count in
+        count = 1024
+        try nothingOrErrno(retryOnInterrupt: false, {
+            sysctlbyname(name, buffer.baseAddress, &count, nil, 0)
+        }).get()
     }
+    return String(decoding: bytes, as: UTF8.self)
 }
 
-internal func readOSRelease() -> (platform: String, version: (major: Int, minor: Int, patch: Int, build: String?)) {
+internal func readOSRelease() throws -> (platform: String, version: (major: Int, minor: Int, patch: Int, build: String?)) {
 #if os(macOS)
-    var platform = "macOS"
+    let platform = "macOS"
 #elseif os(iOS)
-    var platform = "iOS"
+    let platform = "iOS"
 #elseif os(watchOS)
-    var platform = "watchOS"
+    let platform = "watchOS"
 #elseif os(tvOS)
-    var platform = "tvOS"
+    let platform = "tvOS"
 #elseif os(visionOS)
-    var platform = "visionOS"
+    let platform = "visionOS"
 #endif
     
-    let version = getSysCtlString("kern.osproductversion")?
+    let version = try getSysCtlString("kern.osproductversion")
         .split(separator: ".")
-        .compactMap { Int($0) } ?? []
+        .compactMap { Int($0) }
     let major = version.count >= 1 ? version[0] : -1
     let minor = version.count >= 2 ? version[1] : 0
     let patch = version.count >= 3 ? version[2] : 0
     
-    let build = getSysCtlString("kern.osversion")
+    let build = try getSysCtlString("kern.osversion")
     
     return (platform, (major, minor, patch, build))
 }

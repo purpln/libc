@@ -25,7 +25,7 @@ extension FileDescriptor {
 #if os(Windows)
     @_alwaysEmitIntoClient
     public static func open(
-        _ path: UnsafePointer<CInterop.PlatformChar>,
+        _ path: UnsafePointer<PlatformChar>,
         _ mode: FileDescriptor.AccessMode,
         options: FileDescriptor.OpenOptions = FileDescriptor.OpenOptions(),
         permissions: FilePermissions? = nil,
@@ -38,7 +38,7 @@ extension FileDescriptor {
     
     @usableFromInline
     internal static func _open(
-        _ path: UnsafePointer<CInterop.PlatformChar>,
+        _ path: UnsafePointer<PlatformChar>,
         _ mode: FileDescriptor.AccessMode,
         options: FileDescriptor.OpenOptions,
         permissions: FilePermissions?,

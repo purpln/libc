@@ -1,5 +1,5 @@
 public func processorCoresCount() -> Int {
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
     var count: CInt = -1
     var mib: [CInt] = [CTL_HW, HW_NCPU]
     var countSize = MemoryLayout<CInt>.size
@@ -20,7 +20,7 @@ public func processorCoresCount() -> Int {
 }
 
 public func activeCoresCount() -> Int {
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
     var count: CInt = -1
     var mib: [CInt] = [CTL_HW, HW_AVAILCPU]
     var countSize = MemoryLayout<CInt>.size
@@ -46,7 +46,7 @@ public func activeCoresCount() -> Int {
 }
 
 public func physicalMemory() -> UInt64 {
-#if os(macOS) || os(iOS)
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
     var memory: UInt64 = 0
     var memorySize = MemoryLayout<UInt64>.size
     let name = "hw.memsize"
@@ -74,11 +74,11 @@ public func physicalMemory() -> UInt64 {
 
 public func hostname() -> String {
 #if os(Windows)
-    var dwLength: DWORD = 0
-    _ = GetComputerNameExW(ComputerNameDnsHostname, nil, &dwLength)
-    return withUnsafeTemporaryAllocation(of: WCHAR.self, capacity: Int(dwLength)) {
-        dwLength -= 1 // null-terminator reservation
-        guard GetComputerNameExW(ComputerNameDnsHostname, $0.baseAddress!, &dwLength) else {
+    var length: DWORD = 0
+    _ = GetComputerNameExW(ComputerNameDnsHostname, nil, &length)
+    return withUnsafeTemporaryAllocation(of: WCHAR.self, capacity: Int(length)) {
+        //length -= 1 // null-terminator reservation
+        guard GetComputerNameExW(ComputerNameDnsHostname, $0.baseAddress!, &length) else {
             return "localhost"
         }
         return String(decodingCString: $0.baseAddress!, as: UTF16.self)
@@ -96,16 +96,12 @@ public func hostname() -> String {
 #endif
 }
 
-public func operatingSystemVersion() -> (major: Int, minor: Int, patch: Int, build: String?) {
-#if os(macOS) || os(iOS) || os(Linux) || os(Android)
+public func operatingSystemVersion() throws -> (major: Int, minor: Int, patch: Int, build: String?) {
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS) || os(Linux) || os(Android)
     var uts: utsname = utsname()
-    do {
-        try nothingOrErrno(retryOnInterrupt: false, {
-            uname(&uts)
-        }).get()
-    } catch {
-        return (major: -1, minor: 0, patch: 0, build: nil)
-    }
+    try nothingOrErrno(retryOnInterrupt: false, {
+        uname(&uts)
+    }).get()
     
     var string = withUnsafePointer(to: &uts.release.0, { String(cString:  $0) })
     var build: String?
@@ -123,8 +119,8 @@ public func operatingSystemVersion() -> (major: Int, minor: Int, patch: Int, bui
     let patch = version.count >= 3 ? version[2] : 0
     return (major: major, minor: minor, patch: patch, build: build)
 #elseif os(Windows)
-    guard let osVersionInfo = _rawOSVersion else {
-        return (major: -1, minor: 0, patch: 0, build: nil)
+    guard let osVersionInfo = rawOSVersion else {
+        return (major: 0, minor: 0, patch: 0, build: nil)
     }
     
     return (
@@ -133,14 +129,14 @@ public func operatingSystemVersion() -> (major: Int, minor: Int, patch: Int, bui
         patch: Int(osVersionInfo.dwBuildNumber),
         build: nil
     )
-#else
-    return (major: -1, minor: 0, patch: 0, build: nil)
+#elseif os(WASI)
+    return (major: 0, minor: 0, patch: 0, build: nil)
 #endif
 }
 
-public func operatingSystemVersionString() -> String {
-#if os(macOS) || os(iOS)
-    var (platform, version) = readOSRelease()
+public func operatingSystemVersionString() throws -> String {
+#if os(macOS) || os(iOS) || os(watchOS) || os(tvOS)
+    var (platform, version) = try readOSRelease()
     
     if version.major != -1 {
         platform += " \(version.major).\(version.minor).\(version.patch)"
@@ -151,12 +147,12 @@ public func operatingSystemVersionString() -> String {
     
     return platform
 #elseif os(Linux)
-    if let name = readOSRelease()?["PRETTY_NAME"] {
+    if let name = try readOSRelease()["PRETTY_NAME"] {
         return name
     } else {
         var platform = "Linux"
         
-        let version = operatingSystemVersion()
+        let version = try operatingSystemVersion()
         if version.major != -1 {
             platform += " \(version.major).\(version.minor).\(version.patch)"
             if let build = version.build {
@@ -167,7 +163,7 @@ public func operatingSystemVersionString() -> String {
         return platform
     }
 #elseif os(Windows)
-    guard let osVersionInfo = self._rawOSVersion else {
+    guard let osVersionInfo = rawOSVersion else {
         return "Windows"
     }
     

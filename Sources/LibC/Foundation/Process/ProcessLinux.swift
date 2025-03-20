@@ -1,5 +1,5 @@
 #if os(Linux)
-internal func readOSRelease() -> [String:String]? {
+internal func readOSRelease() throws -> [String: String] {
     var descriptor: FileDescriptor
     do {
         descriptor = try FileDescriptor.open("/etc/os-release", .readOnly)
@@ -7,16 +7,16 @@ internal func readOSRelease() -> [String:String]? {
         do {
             descriptor = try FileDescriptor.open("/usr/lib/os-release", .readOnly)
         } catch {
-            return nil
+            throw error
         }
     }
     defer {
         try? descriptor.close()
     }
-    return try? readOSRelease(descriptor: descriptor)
+    return try readOSRelease(descriptor: descriptor)
 }
 
-private func readOSRelease(descriptor: FileDescriptor) throws -> [String:String]? {
+private func readOSRelease(descriptor: FileDescriptor) throws -> [String:String] {
     let contents = try readContents(descriptor: descriptor)
     return Dictionary(OSReleaseScanner(contents), uniquingKeysWith: { $1 })
 }
@@ -177,7 +177,7 @@ func readContents(descriptor: FileDescriptor) throws -> String {
     let length = try descriptor.seek(offset: 0, from: .end)
     
     return try withUnsafeTemporaryAllocation(byteCount: Int(length), alignment: 16) {
-        (buffer: UnsafeMutableRawBufferPointer) throws(Errno) -> String in
+        (buffer: UnsafeMutableRawBufferPointer) throws -> String in
         
         try descriptor.seek(offset: 0, from: .start)
         let result = try descriptor.read(into: buffer)

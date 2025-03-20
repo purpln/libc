@@ -12,6 +12,7 @@ public func system_unlink(
     unlink(path)
 #endif
 }
+
 #if !os(WASI)
 // accept
 public func system_accept(
@@ -105,17 +106,18 @@ public func system_sendto(
     sendto(descriptor, buffer, size, flags, address, length)
 #endif
 }
-#endif
+#endif //!os(WASI)
+
 // open
 public func system_open(
-    _ path: UnsafePointer<CChar>,
+    _ path: UnsafePointer<PlatformChar>,
     _ oflag: CInt
 ) -> CInt {
     open(path, oflag)
 }
 
 public func system_open(
-    _ path: UnsafePointer<CChar>,
+    _ path: UnsafePointer<PlatformChar>,
     _ oflag: CInt,
     _ mode: PlatformMode
 ) -> CInt {
@@ -131,7 +133,7 @@ public func system_close(
 
 // remove
 public func system_remove(
-    _ path: UnsafePointer<CChar>
+    _ path: UnsafePointer<PlatformChar>
 ) -> CInt {
     remove(path)
 }
@@ -315,24 +317,60 @@ public func system_umask(
 #endif
 }
 
-public func system_getenv(
-    _ name: UnsafePointer<CChar>
-) -> UnsafeMutablePointer<CChar>? {
+internal func system_getenv(
+    _ name: UnsafePointer<PlatformChar>
+) -> UnsafeMutablePointer<PlatformChar>? {
     getenv(name)
 }
 
-#if !os(Windows)
-public func system_getcwd(
+internal func system_setenv(
+    _ name: UnsafePointer<PlatformChar>,
+    _ value: UnsafePointer<PlatformChar>,
+    _ overwrite: Int32
+) -> CInt {
+    setenv(name, value, overwrite)
+}
+
+internal func system_getcwd(
     _ buffer: UnsafeMutablePointer<PlatformChar>?,
     _ size: size_t
 ) -> UnsafeMutablePointer<PlatformChar>? {
     getcwd(buffer, size)
 }
-#endif
-#if !os(Windows)
-public func system_free(
+
+internal func system_chdir(
+    _ path: UnsafePointer<PlatformChar>
+) -> CInt {
+    chdir(path)
+}
+
+internal func system_free(
     _ pointer: UnsafeMutableRawPointer?
 ) {
-  free(pointer)
+    free(pointer)
+}
+
+internal func system_symlink(
+    _ original: UnsafePointer<PlatformChar>,
+    _ target: UnsafePointer<PlatformChar>
+) -> CInt {
+    symlink(original, target)
+}
+
+#if !os(Windows)
+internal func system_lstat(_ path: String) throws(Errno) -> stat {
+    var info = stat()
+    try nothingOrErrno(retryOnInterrupt: false, {
+        lstat(path, &info)
+    }).get()
+    return info
+}
+
+internal func system_stat(_ path: String) throws(Errno) -> stat {
+    var info = stat()
+    try nothingOrErrno(retryOnInterrupt: false, {
+        stat(path, &info)
+    }).get()
+    return info
 }
 #endif

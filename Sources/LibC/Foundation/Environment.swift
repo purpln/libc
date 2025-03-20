@@ -3,13 +3,10 @@ public var environment: [String: String] {
     return parse(environ: environ)
 #elseif os(Windows)
     return parseWindowsEnvironment()
-#else
-#warning("Platform-specific implementation missing: environment variables unavailable")
-    return [:]
 #endif
 }
 
-@inlinable nonisolated(unsafe)
+@inlinable
 internal var environ: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?> {
     _platform_shims_lock_environ()
     defer {
@@ -36,7 +33,7 @@ internal func parse(environ: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>)
         guard let pointer = environ[i] else { break }
         
         guard let row = String(validatingCString: pointer),
-           let (key, value) = split(row: row) else {
+              let (key, value) = split(row: row) else {
             continue
         }
         
@@ -59,7 +56,7 @@ internal func parseWindowsEnvironment() -> [String: String] {
     var pointer = environ
     while pointer.pointee != 0 {
         defer {
-            pointer += wcslen(rowp) + 1
+            pointer += wcslen(pointer) + 1
         }
         if let row = String.decodeCString(pointer, as: UTF16.self)?.result,
            let (key, value) = split(row: row) {
@@ -69,3 +66,21 @@ internal func parseWindowsEnvironment() -> [String: String] {
     return result
 }
 #endif
+
+public func getenv(_ name: String) -> String? {
+    name.withPlatformString({ name in
+        system_getenv(name)
+    }).map({ pointer in
+        String(platformString: pointer)
+    })
+}
+
+public func setenv(_ name: String, _ value: String, _ overwrite: Bool = true) throws {
+    try nothingOrErrno(retryOnInterrupt: false, {
+        name.withPlatformString({ name in
+            value.withPlatformString({ value in
+                system_setenv(name, value, overwrite ? 1 : 0)
+            })
+        })
+    }).get()
+}

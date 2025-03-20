@@ -1,3 +1,13 @@
+#if os(Windows)
+private typealias Family = UInt16
+private typealias Port = UInt16
+private typealias Length = Int
+#else
+private typealias Family = sa_family_t
+private typealias Port = in_port_t
+private typealias Length = socklen_t
+#endif
+
 extension in_addr {
     public init?(_ address: String) throws(Errno) {
         var addr = in_addr()
@@ -32,7 +42,7 @@ extension sockaddr_in {
     public init(_ storage: sockaddr_storage) {
         var storage = storage
         var sockaddr = sockaddr_in()
-        memcpy(&sockaddr, &storage, Int(sockaddr_in.size))
+        memcpy(&sockaddr, &storage, sockaddr_in.size)
         self = sockaddr
     }
 }
@@ -41,7 +51,7 @@ extension sockaddr_in6 {
     public init(_ storage: sockaddr_storage) {
         var storage = storage
         var sockaddr = sockaddr_in6()
-        memcpy(&sockaddr, &storage, Int(sockaddr_in6.size))
+        memcpy(&sockaddr, &storage, sockaddr_in6.size)
         self = sockaddr
     }
 }
@@ -50,14 +60,14 @@ extension sockaddr_un {
     public init(_ storage: sockaddr_storage) {
         var storage = storage
         var sockaddr = sockaddr_un()
-        memcpy(&sockaddr, &storage, Int(sockaddr_un.size))
+        memcpy(&sockaddr, &storage, sockaddr_un.size)
         self = sockaddr
     }
 }
 
 extension sockaddr_storage {
-    public static var size: socklen_t {
-        socklen_t(MemoryLayout<sockaddr_storage>.size)
+    private static var size: Int {
+        MemoryLayout<sockaddr_storage>.size
     }
 }
 
@@ -68,16 +78,16 @@ extension sockaddr_in {
     
     public var port: UInt16 {
         get { sin_port.bigEndian }
-        set { sin_port = in_port_t(newValue).bigEndian }
+        set { sin_port = Port(newValue).bigEndian }
     }
     
     public var family: CInt {
         get { CInt(sin_family) }
-        set { sin_family = sa_family_t(newValue) }
+        set { sin_family = Family(newValue) }
     }
     
-    public static var size: socklen_t {
-        socklen_t(MemoryLayout<sockaddr_in>.size)
+    public static var size: Int {
+        MemoryLayout<sockaddr_in>.size
     }
     
     public init(_ address: in_addr, _ port: UInt16) throws(Errno) {
@@ -108,16 +118,16 @@ extension sockaddr_in6 {
     
     public var port: UInt16 {
         get { sin6_port.bigEndian }
-        set { sin6_port = in_port_t(newValue).bigEndian }
+        set { sin6_port = Port(newValue).bigEndian }
     }
     
     public var family: CInt {
         get { CInt(sin6_family) }
-        set { sin6_family = sa_family_t(newValue) }
+        set { sin6_family = Family(newValue) }
     }
     
-    public static var size: socklen_t {
-        socklen_t(MemoryLayout<sockaddr_in6>.size)
+    public static var size: Int {
+        MemoryLayout<sockaddr_in6>.size
     }
     
     public init(_ address: in6_addr, _ port: UInt16) throws {
@@ -148,11 +158,11 @@ extension sockaddr_un {
     
     public var family: CInt {
         get { CInt(sun_family) }
-        set { sun_family = sa_family_t(newValue) }
+        set { sun_family = Family(newValue) }
     }
     
-    public static var size: socklen_t {
-        socklen_t(MemoryLayout<sockaddr_un>.size)
+    public static var size: Int {
+        MemoryLayout<sockaddr_un>.size
     }
     
     public init(_ address: String) throws {
@@ -161,10 +171,8 @@ extension sockaddr_un {
         }
         var sockaddr = sockaddr_un()
 #if !os(WASI)
-        withUnsafeMutablePointer(to: &sockaddr.sun_path) { pointer in
-            address.withCString {
-                _ = strcpy(pointer, $0)
-            }
+        _ = address.withCString {
+            memcpy(&sockaddr.sun_path, $0, address.count)
         }
 #endif
 #if canImport(Darwin.C)
@@ -283,7 +291,7 @@ extension in_addr {
     public var description: String {
         var bytes = [UInt8](repeating: 0, count: Int(INET_ADDRSTRLEN))
         var addr = self
-        guard inet_ntop(AF_INET, &addr, &bytes, socklen_t(INET_ADDRSTRLEN)) != nil else { return "" }
+        guard inet_ntop(AF_INET, &addr, &bytes, Length(INET_ADDRSTRLEN)) != nil else { return "" }
         return String(decoding: bytes, as: UTF8.self)
     }
 }
@@ -293,7 +301,7 @@ extension in6_addr {
         var bytes = [UInt8](repeating: 0, count: Int(INET6_ADDRSTRLEN))
         var addr = self
         guard
-            inet_ntop(AF_INET6, &addr, &bytes, socklen_t(INET6_ADDRSTRLEN))
+            inet_ntop(AF_INET6, &addr, &bytes, Length(INET6_ADDRSTRLEN))
                 != nil
         else {
             return ""
@@ -315,7 +323,7 @@ extension sockaddr_un: Equatable {}
 extension in_addr: Equatable {}
 extension in6_addr: Equatable {}
 #endif
- 
+
 public protocol NativeStructEquatable {}
 
 extension sockaddr_in: NativeStructEquatable {}

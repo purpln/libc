@@ -18,8 +18,8 @@ internal var system_errno: CInt {
 }
 #endif
 
-internal func system_strerror(_ errnum: CInt) -> UnsafeMutablePointer<Int8>! {
-    strerror(errnum)
+internal func system_strerror(_ number: CInt) -> UnsafeMutablePointer<Int8>? {
+    strerror(number)
 }
 
 internal func system_strlen(_ s: UnsafePointer<CChar>) -> Int {
@@ -31,18 +31,18 @@ internal func system_strlen(_ s: UnsafeMutablePointer<CChar>) -> Int {
 
 #if os(Windows)
 /// The C `mode_t` type.
-internal typealias PlatformMode = CInt
+public typealias PlatformMode = CInt
 
 /// The platform's preferred character type. On Unix, this is an 8-bit C
 /// `char` (which may be signed or unsigned, depending on platform). On
 /// Windows, this is `UInt16` (a "wide" character).
-internal typealias PlatformChar = UInt16
+public typealias PlatformChar = UInt16
 
 /// The platform's preferred Unicode encoding. On Unix this is UTF-8 and on
 /// Windows it is UTF-16. Native strings may contain invalid Unicode,
 /// which will be handled by either error-correction or failing, depending
 /// on API.
-internal typealias PlatformUnicodeEncoding = UTF16
+public typealias PlatformUnicodeEncoding = UTF16
 #else
 /// The C `mode_t` type.
 public typealias PlatformMode = mode_t

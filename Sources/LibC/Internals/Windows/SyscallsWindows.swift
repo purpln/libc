@@ -1,17 +1,111 @@
 #if os(Windows)
 
-import ucrt
-import WinSDK
+@inline(__always)
+internal func getenv(
+    _ name: UnsafePointer<PlatformChar>
+) -> UnsafeMutablePointer<PlatformChar>? {
+    let length: DWORD = GetEnvironmentVariableW(name, nil, 0)
+    guard length > 0 else { return nil }
+    
+    var buffer = [WCHAR](repeating: 0, count: Int(length))
+    GetEnvironmentVariableW(name, &buffer, length)
+    return buffer.withUnsafeMutableBufferPointer({ $0.baseAddress! })
+}
+
+@inline(__always)
+internal func setenv(
+    _ name: UnsafePointer<PlatformChar>,
+    _ value: UnsafePointer<PlatformChar>,
+    _ overwrite: Int32
+) -> CInt {
+    if overwrite == 0 {
+        if GetEnvironmentVariableW(name, nil, 0) == 0 && GetLastError() != ERROR_ENVVAR_NOT_FOUND {
+            print("found")
+        }
+    }
+    guard SetEnvironmentVariableW(name, value) else {
+        ucrt._set_errno(Win32Error().errno.rawValue)
+        return -1
+    }
+    return 0
+}
+
+@inline(__always)
+internal func strerror(_ number: CInt) -> UnsafePointer<CChar>? {
+    let buffer = [CChar](unsafeUninitializedCapacity: 1024) { buffer, length in
+        _ = strerror_s(buffer.baseAddress!, buffer.count, number)
+        length = strnlen(buffer.baseAddress!, buffer.count)
+    }
+    return buffer.withUnsafeBufferPointer({ $0.baseAddress! })
+}
+
+@inline(__always)
+internal func getcwd(
+    _ buffer: UnsafeMutablePointer<PlatformChar>?,
+    _ size: size_t
+) -> UnsafeMutablePointer<PlatformChar>? {
+    let length: DWORD = GetCurrentDirectoryW(0, nil)
+    guard length > 0 else {
+        ucrt._set_errno(Win32Error().errno.rawValue)
+        return nil
+    }
+    var buffer = [WCHAR](repeating: 0, count: Int(length))
+    GetCurrentDirectoryW(length, &buffer)
+    return buffer.withUnsafeMutableBufferPointer({ $0.baseAddress! })
+}
+
+@inline(__always)
+internal func chdir(
+    _ path: UnsafePointer<PlatformChar>
+) -> CInt {
+    guard SetCurrentDirectoryW(path) else {
+        ucrt._set_errno(Win32Error().errno.rawValue)
+        return -1
+    }
+    return 0
+}
+
+@inline(__always)
+internal func symlink(
+    _ original: UnsafePointer<PlatformChar>,
+    _ target: UnsafePointer<PlatformChar>
+) -> CInt {
+    let attributes = GetFileAttributesW(original)
+    guard attributes != INVALID_FILE_ATTRIBUTES else {
+        ucrt._set_errno(Win32Error().errno.rawValue)
+        return -1
+    }
+    
+    let isDirectory = (CInt(attributes) & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY
+    let flags = DWORD(isDirectory ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0) | DWORD(SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE)
+    
+    guard CreateSymbolicLinkW(original, target, flags) != 0 else {
+        ucrt._set_errno(Win32Error().errno.rawValue)
+        return -1
+    }
+    return 0
+}
 
 fileprivate var _umask: PlatformMode = 0o22
 
 @inline(__always)
-func umask(
+internal func umask(
     _ mode: PlatformMode
 ) -> PlatformMode {
     let oldMask = _umask
     _umask = mode
     return oldMask
+}
+
+@inline(__always)
+internal func remove(
+    _ path: UnsafePointer<PlatformChar>
+) -> CInt {
+    guard DeleteFileW(path) else {
+        ucrt._set_errno(Win32Error().errno.rawValue)
+        return -1
+    }
+    return 0
 }
 
 @inline(__always)
@@ -37,11 +131,11 @@ internal func open(
                             nil)
     
     if hFile == INVALID_HANDLE_VALUE {
-        ucrt._set_errno(_mapWindowsErrorToErrno(GetLastError()))
+        ucrt._set_errno(Win32Error().errno.rawValue)
         return -1
     }
     
-    return _open_osfhandle(intptr_t(bitPattern: hFile), oflag);
+    return ucrt._open_osfhandle(intptr_t(bitPattern: hFile), oflag);
 }
 
 @inline(__always)
@@ -52,7 +146,7 @@ internal func open(
     let actualMode = mode & ~_umask
     
     guard let pSD = _createSecurityDescriptor(from: actualMode, for: .file) else {
-        ucrt._set_errno(_mapWindowsErrorToErrno(GetLastError()))
+        ucrt._set_errno(Win32Error().errno.rawValue)
         return -1
     }
     
@@ -79,61 +173,66 @@ internal func open(
                             nil)
     
     if hFile == INVALID_HANDLE_VALUE {
-        ucrt._set_errno(_mapWindowsErrorToErrno(GetLastError()))
+        ucrt._set_errno(Win32Error().errno.rawValue)
         return -1
     }
     
-    return _open_osfhandle(intptr_t(bitPattern: hFile), oflag);
+    return ucrt._open_osfhandle(intptr_t(bitPattern: hFile), oflag);
+}
+
+@inline(__always)
+internal func unlink(_ path: UnsafePointer<CChar>?) -> CInt {
+    ucrt._unlink(path)
 }
 
 @inline(__always)
 internal func close(_ descriptor: CInt) -> CInt {
-    _close(descriptor)
+    ucrt._close(descriptor)
 }
 
 @inline(__always)
 internal func lseek(
     _ descriptor: CInt, _ offset: Int64, _ whence: CInt
 ) -> Int64 {
-    _lseeki64(descriptor, offset, whence)
+    ucrt._lseeki64(descriptor, offset, whence)
 }
 
 @inline(__always)
 internal func read(
     _ descriptor: CInt, _ buffer: UnsafeMutableRawPointer!, _ size: Int
 ) -> Int {
-    Int(_read(descriptor, buffer, numericCast(size)))
+    Int(ucrt._read(descriptor, buffer, numericCast(size)))
 }
 
 @inline(__always)
 internal func write(
     _ descriptor: CInt, _ buffer: UnsafeRawPointer!, _ size: Int
 ) -> Int {
-    Int(_write(descriptor, buffer, numericCast(size)))
+    Int(ucrt._write(descriptor, buffer, numericCast(size)))
 }
 
 @inline(__always)
 internal func lseek(
     _ descriptor: CInt, _ offset: off_t, _ whence: CInt
 ) -> off_t {
-    _lseek(descriptor, offset, whence)
+    ucrt._lseek(descriptor, offset, whence)
 }
 
 @inline(__always)
 internal func dup(_ descriptor: CInt) -> CInt {
-    _dup(descriptor)
+    ucrt._dup(descriptor)
 }
 
 @inline(__always)
 internal func dup2(_ descriptor1: CInt, _ descriptor2: CInt) -> CInt {
-    _dup2(descriptor1, descriptor2)
+    ucrt._dup2(descriptor1, descriptor2)
 }
 
 @inline(__always)
 internal func pread(
     _ descriptor: CInt, _ buffer: UnsafeMutableRawPointer!, _ nbyte: Int, _ offset: off_t
 ) -> Int {
-    let handle: intptr_t = _get_osfhandle(descriptor)
+    let handle: intptr_t = ucrt._get_osfhandle(descriptor)
     if handle == /* INVALID_HANDLE_VALUE */ -1 { ucrt._set_errno(EBADF); return -1 }
     
     // NOTE: this is a non-owning handle, do *not* call CloseHandle on it
@@ -145,7 +244,7 @@ internal func pread(
     
     var nNumberOfBytesRead: DWORD = 0
     if !ReadFile(hFile, buffer, DWORD(nbyte), &nNumberOfBytesRead, &ovlOverlapped) {
-        ucrt._set_errno(_mapWindowsErrorToErrno(GetLastError()))
+        ucrt._set_errno(Win32Error().errno.rawValue)
         return Int(-1)
     }
     return Int(nNumberOfBytesRead)
@@ -155,7 +254,7 @@ internal func pread(
 internal func pwrite(
     _ descriptor: CInt, _ buffer: UnsafeRawPointer!, _ nbyte: Int, _ offset: off_t
 ) -> Int {
-    let handle: intptr_t = _get_osfhandle(descriptor)
+    let handle: intptr_t = ucrt._get_osfhandle(descriptor)
     if handle == /* INVALID_HANDLE_VALUE */ -1 { ucrt._set_errno(EBADF); return -1 }
     
     // NOTE: this is a non-owning handle, do *not* call CloseHandle on it
@@ -168,7 +267,7 @@ internal func pwrite(
     var nNumberOfBytesWritten: DWORD = 0
     if !WriteFile(hFile, buffer, DWORD(nbyte), &nNumberOfBytesWritten,
                   &ovlOverlapped) {
-        ucrt._set_errno(_mapWindowsErrorToErrno(GetLastError()))
+        ucrt._set_errno(Win32Error().errno.rawValue)
         return Int(-1)
     }
     return Int(nNumberOfBytesWritten)
@@ -178,12 +277,12 @@ internal func pwrite(
 internal func pipe(
     _ descriptors: UnsafeMutablePointer<CInt>, bytesReserved: UInt32 = 4096
 ) -> CInt {
-    return _pipe(descriptors, bytesReserved, _O_BINARY | _O_NOINHERIT);
+    return ucrt._pipe(descriptors, bytesReserved, _O_BINARY | _O_NOINHERIT);
 }
 
 @inline(__always)
 internal func ftruncate(_ descriptor: CInt, _ length: off_t) -> CInt {
-    let handle: intptr_t = _get_osfhandle(descriptor)
+    let handle: intptr_t = ucrt._get_osfhandle(descriptor)
     if handle == /* INVALID_HANDLE_VALUE */ -1 { ucrt._set_errno(EBADF); return -1 }
     
     // NOTE: this is a non-owning handle, do *not* call CloseHandle on it
@@ -194,7 +293,7 @@ internal func ftruncate(_ descriptor: CInt, _ length: off_t) -> CInt {
     // Save the current position and restore it when we're done
     if !SetFilePointerEx(hFile, liCurrentOffset, &liCurrentOffset,
                          DWORD(FILE_CURRENT)) {
-        ucrt._set_errno(_mapWindowsErrorToErrno(GetLastError()))
+        ucrt._set_errno(Win32Error().errno.rawValue)
         return -1
     }
     defer {
@@ -204,7 +303,7 @@ internal func ftruncate(_ descriptor: CInt, _ length: off_t) -> CInt {
     // Truncate (or extend) the file
     if !SetFilePointerEx(hFile, liDesiredLength, nil, DWORD(FILE_BEGIN))
         || !SetEndOfFile(hFile) {
-        ucrt._set_errno(_mapWindowsErrorToErrno(GetLastError()))
+        ucrt._set_errno(Win32Error().errno.rawValue)
         return -1
     }
     
@@ -220,7 +319,7 @@ internal func mkdir(
     
     guard let pSD = _createSecurityDescriptor(from: actualMode,
                                               for: .directory) else {
-        ucrt._set_errno(_mapWindowsErrorToErrno(GetLastError()))
+        ucrt._set_errno(Win32Error().errno.rawValue)
         return -1
     }
     defer {
@@ -234,7 +333,7 @@ internal func mkdir(
     )
     
     if !CreateDirectoryW(path, &saAttrs) {
-        ucrt._set_errno(_mapWindowsErrorToErrno(GetLastError()))
+        ucrt._set_errno(Win32Error().errno.rawValue)
         return -1
     }
     
@@ -245,84 +344,12 @@ internal func mkdir(
 internal func rmdir(
     _ path: UnsafePointer<PlatformChar>
 ) -> CInt {
-    if !RemoveDirectoryW(path) {
-        ucrt._set_errno(_mapWindowsErrorToErrno(GetLastError()))
+    guard RemoveDirectoryW(path) else {
+        ucrt._set_errno(Win32Error().errno.rawValue)
         return -1
     }
     
     return 0;
-}
-
-internal func _mapWindowsErrorToErrno(_ errorCode: DWORD) -> CInt {
-    switch CInt(errorCode) {
-    case ERROR_SUCCESS:
-        return 0
-    case ERROR_INVALID_FUNCTION,
-        ERROR_INVALID_ACCESS,
-        ERROR_INVALID_DATA,
-        ERROR_INVALID_PARAMETER,
-    ERROR_NEGATIVE_SEEK:
-        return EINVAL
-    case ERROR_FILE_NOT_FOUND,
-        ERROR_PATH_NOT_FOUND,
-        ERROR_INVALID_DRIVE,
-        ERROR_NO_MORE_FILES,
-        ERROR_BAD_NETPATH,
-        ERROR_BAD_NET_NAME,
-        ERROR_BAD_PATHNAME,
-    ERROR_FILENAME_EXCED_RANGE:
-        return ENOENT
-    case ERROR_TOO_MANY_OPEN_FILES:
-        return EMFILE
-    case ERROR_ACCESS_DENIED,
-        ERROR_CURRENT_DIRECTORY,
-        ERROR_LOCK_VIOLATION,
-        ERROR_NETWORK_ACCESS_DENIED,
-        ERROR_CANNOT_MAKE,
-        ERROR_FAIL_I24,
-        ERROR_DRIVE_LOCKED,
-        ERROR_SEEK_ON_DEVICE,
-        ERROR_NOT_LOCKED,
-        ERROR_LOCK_FAILED,
-        ERROR_WRITE_PROTECT...ERROR_SHARING_BUFFER_EXCEEDED:
-        return EACCES
-    case ERROR_INVALID_HANDLE,
-        ERROR_INVALID_TARGET_HANDLE,
-    ERROR_DIRECT_ACCESS_HANDLE:
-        return EBADF
-    case ERROR_ARENA_TRASHED,
-        ERROR_NOT_ENOUGH_MEMORY,
-        ERROR_INVALID_BLOCK,
-    ERROR_NOT_ENOUGH_QUOTA:
-        return ENOMEM
-    case ERROR_BAD_ENVIRONMENT:
-        return E2BIG
-    case ERROR_BAD_FORMAT,
-        ERROR_INVALID_STARTING_CODESEG...ERROR_INFLOOP_IN_RELOC_CHAIN:
-        return ENOEXEC
-    case ERROR_NOT_SAME_DEVICE:
-        return EXDEV
-    case ERROR_FILE_EXISTS,
-    ERROR_ALREADY_EXISTS:
-        return EEXIST
-    case ERROR_NO_PROC_SLOTS,
-        ERROR_MAX_THRDS_REACHED,
-    ERROR_NESTING_NOT_ALLOWED:
-        return EAGAIN
-    case ERROR_BROKEN_PIPE:
-        return EPIPE
-    case ERROR_DISK_FULL:
-        return ENOSPC
-    case ERROR_WAIT_NO_CHILDREN,
-    ERROR_CHILD_NOT_COMPLETE:
-        return ECHILD
-    case ERROR_DIR_NOT_EMPTY:
-        return ENOTEMPTY
-    case ERROR_NO_UNICODE_TRANSLATION:
-        return EILSEQ
-    default:
-        return EINVAL
-    }
 }
 
 fileprivate func rightsFromModeBits(
@@ -372,19 +399,19 @@ fileprivate func getTokenInformation<T>(
             alignment: MemoryLayout<T>.alignment
         )
         
-        var dwLength = DWORD(0)
+        var length = DWORD(0)
         
         if GetTokenInformation(hToken,
                                ticTokenClass,
                                buffer,
                                DWORD(capacity),
-                               &dwLength) {
+                               &length) {
             return UnsafePointer(buffer.assumingMemoryBound(to: T.self))
         }
         
         buffer.deallocate()
         
-        capacity = Int(dwLength)
+        capacity = Int(length)
     }
     return nil
 }
@@ -496,7 +523,7 @@ internal func _createSecurityDescriptor(from mode: PlatformMode,
                 TrusteeForm: TRUSTEE_IS_SID,
                 TrusteeType: TRUSTEE_IS_GROUP,
                 ptstrName:
-                    everyone.assumingMemoryBound(to: .PlatformChar.self)
+                    everyone.assumingMemoryBound(to: PlatformChar.self)
             )
         )
     ]

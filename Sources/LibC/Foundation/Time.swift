@@ -1,6 +1,12 @@
 @usableFromInline
 internal let absoluteTimeIntervalSince1970: Double = 978307200
 
+@usableFromInline
+internal let absoluteTimeIntervalSince1601: Double = 12622780800
+
+@usableFromInline
+internal let format: String = "%Y-%m-%d %H:%M:%S %z"
+
 public extension timespec {
     @inlinable
     static var now: timespec {
@@ -19,7 +25,11 @@ public extension timespec {
     @inlinable
     init<T: BinaryFloatingPoint>(interval: T) {
         let (whole, fraction) = modf(interval)
+#if os(Windows)
+        self = timespec(tv_sec: time_t(whole), tv_nsec: CInt(fraction * 1e9))
+#else
         self = timespec(tv_sec: time_t(whole), tv_nsec: Int(fraction * 1e9))
+#endif
     }
     
     @inlinable
@@ -52,7 +62,11 @@ public extension timeval {
     @inlinable
     init<T: BinaryFloatingPoint>(interval: T) {
         let (whole, fraction) = modf(interval)
+#if os(Windows)
+        self = timeval(tv_sec: CInt(whole), tv_usec: CInt(fraction * 1e6))
+#else
         self = timeval(tv_sec: time_t(whole), tv_usec: suseconds_t(fraction * 1e6))
+#endif
     }
     
     @inlinable
@@ -129,11 +143,7 @@ extension timespec /* AdditiveArithmetic */ {
     public static func + (lhs: timespec, rhs: timespec) -> timespec {
         let raw = rhs.tv_nsec + lhs.tv_nsec
         let ns = raw % 1_000_000_000
-#if os(WASI)
-        let s = lhs.tv_sec + rhs.tv_sec + Int64(raw / 1_000_000_000)
-#else
-        let s = lhs.tv_sec + rhs.tv_sec + (raw / 1_000_000_000)
-#endif
+        let s = lhs.tv_sec + rhs.tv_sec + time_t(raw / 1_000_000_000)
         return timespec(tv_sec: s, tv_nsec: ns)
     }
     
@@ -142,19 +152,11 @@ extension timespec /* AdditiveArithmetic */ {
         
         if raw >= 0 {
             let ns = raw % 1_000_000_000
-#if os(WASI)
-            let s = lhs.tv_sec - rhs.tv_sec + Int64(raw / 1_000_000_000)
-#else
-            let s = lhs.tv_sec - rhs.tv_sec + (raw / 1_000_000_000)
-#endif
+            let s = lhs.tv_sec - rhs.tv_sec + time_t(raw / 1_000_000_000)
             return timespec(tv_sec: s, tv_nsec: ns)
         } else {
             let ns = 1_000_000_000 - (-raw % 1_000_000_000)
-#if os(WASI)
-            let s = lhs.tv_sec - rhs.tv_sec - 1 - Int64(-raw / 1_000_000_000)
-#else
-            let s = lhs.tv_sec - rhs.tv_sec - 1 - (-raw / 1_000_000_000)
-#endif
+            let s = lhs.tv_sec - rhs.tv_sec - 1 - time_t(-raw / 1_000_000_000)
             return timespec(tv_sec: s, tv_nsec: ns)
         }
     }
@@ -167,14 +169,9 @@ extension timespec /* AdditiveArithmetic */ {
 extension timespec /* CustomStringConvertible */ {
     @inlinable
     public var description: String {
-        var seconds = tv_sec
-        let ts = localtime(&seconds)
-        
-        let length = 64
-        let buffer = [UInt8](unsafeUninitializedCapacity: length) { buffer, count in
-            count = strftime(buffer.baseAddress!, length, /* %A */ "%Y-%m-%d %H:%M:%S %z", ts!)
-        }
-        return String(decoding: buffer, as: UTF8.self)
+        let seconds = tv_sec
+        let tm = localtime(seconds)
+        return strftime(format, tm)
     }
 }
 
@@ -220,10 +217,10 @@ extension timeval /* AdditiveArithmetic */ {
     public static func + (lhs: timeval, rhs: timeval) -> timeval {
         let raw = rhs.tv_usec + lhs.tv_usec
         let ns = raw % 1_000_000
-#if os(WASI)
-        let s = lhs.tv_sec + rhs.tv_sec + (raw / 1_000_000)
+#if os(Windows)
+        let s = CInt(lhs.tv_sec + rhs.tv_sec) + CInt(raw / 1_000_000)
 #else
-        let s = lhs.tv_sec + rhs.tv_sec + (Int(raw) / 1_000_000)
+        let s = lhs.tv_sec + rhs.tv_sec + time_t(raw / 1_000_000)
 #endif
         return timeval(tv_sec: s, tv_usec: ns)
     }
@@ -233,18 +230,18 @@ extension timeval /* AdditiveArithmetic */ {
         
         if raw >= 0 {
             let ns = raw % 1_000_000
-#if os(WASI)
-            let s = lhs.tv_sec - rhs.tv_sec + (raw / 1_000_000)
+#if os(Windows)
+            let s = lhs.tv_sec - rhs.tv_sec - 1 - (-raw / 1_000_000)
 #else
-            let s = lhs.tv_sec - rhs.tv_sec + (Int(raw) / 1_000_000)
+            let s = time_t(lhs.tv_sec - rhs.tv_sec) + time_t(raw / 1_000_000)
 #endif
             return timeval(tv_sec: s, tv_usec: ns)
         } else {
             let ns = 1_000_000 - (-raw % 1_000_000)
-#if os(WASI)
+#if os(Windows)
             let s = lhs.tv_sec - rhs.tv_sec - 1 - (-raw / 1_000_000)
 #else
-            let s = lhs.tv_sec - rhs.tv_sec - 1 - (-Int(raw) / 1_000_000)
+            let s = time_t(lhs.tv_sec - rhs.tv_sec) - 1 - time_t(-raw / 1_000_000)
 #endif
             return timeval(tv_sec: s, tv_usec: ns)
         }
@@ -258,13 +255,39 @@ extension timeval /* AdditiveArithmetic */ {
 extension timeval /* CustomStringConvertible */ {
     @inlinable
     public var description: String {
-        var seconds = tv_sec
-        let ts = localtime(&seconds)
-        
-        let length = 64
-        let buffer = [UInt8](unsafeUninitializedCapacity: length) { buffer, count in
-            count = strftime(buffer.baseAddress!, length, /* %A */ "%Y-%m-%d %H:%M:%S %z", ts!)
-        }
-        return String(decoding: buffer, as: UTF8.self)
+        let seconds = time_t(tv_sec)
+        let tm = localtime(seconds)
+        return strftime("%Y-%m-%d %H:%M:%S %z", tm)
     }
 }
+
+@inlinable
+internal func strftime(_ format: String, _ time: tm) -> String {
+    let capacity = 64
+    let bytes = [UInt8](unsafeUninitializedCapacity: capacity) { buffer, count in
+        count = withUnsafePointer(to: time, {
+            strftime(buffer.baseAddress!, capacity, format, $0)
+        })
+    }
+    return String(decoding: bytes, as: UTF8.self)
+}
+
+#if os(Windows)
+@inlinable
+internal func localtime(_ source: time_t) -> tm {
+    var time = tm()
+    _ = withUnsafePointer(to: source, {
+        localtime_s(&time, $0)
+    })
+    return time
+}
+#else
+@inlinable
+internal func localtime(_ source: time_t) -> tm {
+    var time = tm()
+    _ = withUnsafePointer(to: source, {
+        localtime_r($0, &time)
+    })
+    return time
+}
+#endif

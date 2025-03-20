@@ -1,11 +1,11 @@
 public struct FileDescriptor: RawRepresentable, Sendable, Equatable, Hashable {
     public let rawValue: CInt
-
+    
     public init(rawValue: CInt) {
         self.rawValue = rawValue
     }
 }
-
+#if !os(Windows)
 public extension FileDescriptor {
     @inlinable
     static var input: FileDescriptor  { FileDescriptor(rawValue: STDIN_FILENO) }
@@ -22,13 +22,13 @@ public extension FileDescriptor {
         get { fcntl(rawValue, F_GETFD, 0) }
         nonmutating set { _ = fcntl(rawValue, F_SETFD, newValue) }
     }
-
+    
     var status: CInt {
         get { fcntl(rawValue, F_GETFL, 0) }
         nonmutating set { _ = fcntl(rawValue, F_SETFL, newValue) }
     }
 }
-
+#endif
 extension FileDescriptor {
     @frozen
     public struct AccessMode: RawRepresentable, Sendable, Hashable, Codable {

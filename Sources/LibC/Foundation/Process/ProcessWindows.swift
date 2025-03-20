@@ -1,5 +1,5 @@
 #if os(Windows)
-internal var _rawOSVersion: RTL_OSVERSIONINFOEXW? {
+internal var rawOSVersion: RTL_OSVERSIONINFOEXW? {
     guard let ntdll = "ntdll.dll".withCString(encodedAs: UTF16.self, LoadLibraryW) else {
         return nil
     }
