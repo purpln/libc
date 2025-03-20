@@ -42,7 +42,7 @@ extension sockaddr_in {
     public init(_ storage: sockaddr_storage) {
         var storage = storage
         var sockaddr = sockaddr_in()
-        memcpy(&sockaddr, &storage, sockaddr_in.size)
+        memcpy(&sockaddr, &storage, Int(sockaddr_in.size))
         self = sockaddr
     }
 }
@@ -51,7 +51,7 @@ extension sockaddr_in6 {
     public init(_ storage: sockaddr_storage) {
         var storage = storage
         var sockaddr = sockaddr_in6()
-        memcpy(&sockaddr, &storage, sockaddr_in6.size)
+        memcpy(&sockaddr, &storage, Int(sockaddr_in6.size))
         self = sockaddr
     }
 }
@@ -60,7 +60,7 @@ extension sockaddr_un {
     public init(_ storage: sockaddr_storage) {
         var storage = storage
         var sockaddr = sockaddr_un()
-        memcpy(&sockaddr, &storage, sockaddr_un.size)
+        memcpy(&sockaddr, &storage, Int(sockaddr_un.size))
         self = sockaddr
     }
 }
@@ -86,8 +86,8 @@ extension sockaddr_in {
         set { sin_family = Family(newValue) }
     }
     
-    public static var size: Int {
-        MemoryLayout<sockaddr_in>.size
+    public static var size: socklen_t {
+        socklen_t(MemoryLayout<sockaddr_in>.size)
     }
     
     public init(_ address: in_addr, _ port: UInt16) throws(Errno) {
@@ -126,8 +126,8 @@ extension sockaddr_in6 {
         set { sin6_family = Family(newValue) }
     }
     
-    public static var size: Int {
-        MemoryLayout<sockaddr_in6>.size
+    public static var size: socklen_t {
+        socklen_t(MemoryLayout<sockaddr_in6>.size)
     }
     
     public init(_ address: in6_addr, _ port: UInt16) throws {
@@ -161,8 +161,8 @@ extension sockaddr_un {
         set { sun_family = Family(newValue) }
     }
     
-    public static var size: Int {
-        MemoryLayout<sockaddr_un>.size
+    public static var size: socklen_t {
+        socklen_t(MemoryLayout<sockaddr_un>.size)
     }
     
     public init(_ address: String) throws {

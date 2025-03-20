@@ -31,12 +31,12 @@ internal func setenv(
 }
 
 @inline(__always)
-internal func strerror(_ number: CInt) -> UnsafePointer<CChar>? {
-    let buffer = [CChar](unsafeUninitializedCapacity: 1024) { buffer, length in
+internal func strerror(_ number: CInt) -> UnsafeMutablePointer<CChar>? {
+    var buffer = [CChar](unsafeUninitializedCapacity: 1024) { buffer, length in
         _ = strerror_s(buffer.baseAddress!, buffer.count, number)
         length = strnlen(buffer.baseAddress!, buffer.count)
     }
-    return buffer.withUnsafeBufferPointer({ $0.baseAddress! })
+    return buffer.withUnsafeMutableBufferPointer({ $0.baseAddress! })
 }
 
 @inline(__always)
