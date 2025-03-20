@@ -86,7 +86,8 @@ internal func symlink(
     return 0
 }
 
-fileprivate var _umask: PlatformMode = 0o22
+nonisolated(unsafe)
+private var _umask: PlatformMode = 0o22
 
 @inline(__always)
 internal func umask(

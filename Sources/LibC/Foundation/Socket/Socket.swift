@@ -66,8 +66,8 @@ extension sockaddr_un {
 }
 
 extension sockaddr_storage {
-    public static var size: Int {
-        MemoryLayout<sockaddr_storage>.size
+    public static var size: socklen_t {
+        socklen_t(MemoryLayout<sockaddr_storage>.size)
     }
 }
 
