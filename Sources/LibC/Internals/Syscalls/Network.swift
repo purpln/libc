@@ -34,7 +34,7 @@ public func system_getsockopt(
     _ descriptor: CInt,
     _ level: CInt,
     _ name: CInt,
-    _ value: UnsafeMutablePointer<CChar>?,
+    _ value: UnsafeMutableRawPointer?,
     _ length: UnsafeMutablePointer<socklen_t>
 ) -> CInt {
     getsockopt(descriptor, level, name, value, length)
@@ -44,7 +44,7 @@ public func system_setsockopt(
     _ descriptor: CInt,
     _ level: CInt,
     _ name: CInt,
-    _ value: UnsafePointer<CChar>?,
+    _ value: UnsafeRawPointer?,
     _ length: socklen_t
 ) -> CInt {
     setsockopt(descriptor, level, name, value, length)
