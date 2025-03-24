@@ -264,3 +264,10 @@ internal func system_stat(_ path: String) throws(Errno) -> stat {
     return info
 }
 #endif
+#if os(Windows)
+public func system_closesocket(
+    _ descriptor: CInt
+) -> CInt {
+    closesocket(descriptor)
+}
+#endif

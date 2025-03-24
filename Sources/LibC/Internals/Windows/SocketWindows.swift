@@ -5,7 +5,16 @@ internal func socket(
     _ type: CInt,
     _ protocol: CInt
 ) -> CInt {
-    CInt(socket(family, type, `protocol`) as SOCKET)
+    let result = socket(family, type, `protocol`) as SOCKET
+    guard result != INVALID_SOCKET else { return -1 }
+    return CInt(result)
+}
+
+@inline(__always)
+internal func closesocket(
+    _ descriptor: CInt
+) -> CInt {
+    closesocket(SOCKET(descriptor))
 }
 
 @inline(__always)
@@ -63,7 +72,9 @@ internal func accept(
     _ address: UnsafeMutablePointer<sockaddr>?,
     _ length: UnsafeMutablePointer<socklen_t>?
 ) -> CInt {
-    CInt(accept(SOCKET(descriptor), address, length))
+    let result = accept(SOCKET(descriptor), address, length)
+    guard result != INVALID_SOCKET else { return -1 }
+    return CInt(result)
 }
 
 @inline(__always)
