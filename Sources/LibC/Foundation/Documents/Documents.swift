@@ -271,3 +271,33 @@ public func write(path: String, bytes: [UInt8]) throws {
         if result == count { break }
     }
 }
+
+public func copy(from origin: String, to destination: String) throws {
+    let originAllocator = Allocator(open: {
+        try FileDescriptor.open(origin, .readOnly)
+    }, close: { descriptor in
+        try descriptor.close()
+    })
+    let destinationAllocator = Allocator(open: {
+        try FileDescriptor.open(destination, .writeOnly, options: [.create], permissions: .ownerReadWriteExecute)
+    }, close: { descriptor in
+        try descriptor.close()
+    })
+    let origin = try originAllocator.allocate()
+    let destination = try destinationAllocator.allocate()
+    
+    var buffer = [UInt8](repeating: 0, count: 4096)
+    
+    while true {
+        let length = try buffer.withUnsafeMutableBytes({ buffer in
+            try origin.read(into: buffer)
+        })
+        guard length > 0 else { break }
+        let count = try buffer[0..<length].withUnsafeBytes({ buffer in
+            try destination.write(UnsafeRawBufferPointer(buffer))
+        })
+        guard length == count else {
+            preconditionFailure("read: \(length), write: \(count)")
+        }
+    }
+}
