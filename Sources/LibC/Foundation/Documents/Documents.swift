@@ -279,7 +279,7 @@ public func copy(from origin: String, to destination: String) throws {
         try descriptor.close()
     })
     let destinationAllocator = Allocator(open: {
-        try FileDescriptor.open(destination, .writeOnly, options: [.create], permissions: .ownerReadWriteExecute)
+        try FileDescriptor.open(destination, .writeOnly, options: [.create, .truncate], permissions: .ownerReadWriteExecute)
     }, close: { descriptor in
         try descriptor.close()
     })
