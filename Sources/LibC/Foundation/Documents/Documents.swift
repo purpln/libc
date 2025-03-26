@@ -265,8 +265,8 @@ public func write(path: String, bytes: [UInt8]) throws {
     var result = 0
     
     while true {
-        result += try bytes.withUnsafeBufferPointer({
-            try pointer.write(UnsafeRawBufferPointer($0))
+        result += try bytes.withUnsafeBytes({
+            try pointer.write($0)
         })
         if result == count { break }
     }
@@ -289,12 +289,12 @@ public func copy(from origin: String, to destination: String) throws {
     var buffer = [UInt8](repeating: 0, count: 4096)
     
     while true {
-        let length = try buffer.withUnsafeMutableBytes({ buffer in
-            try origin.read(into: buffer)
+        let length = try buffer.withUnsafeMutableBytes({
+            try origin.read(into: $0)
         })
         guard length > 0 else { break }
-        let count = try buffer[0..<length].withUnsafeBytes({ buffer in
-            try destination.write(UnsafeRawBufferPointer(buffer))
+        let count = try buffer[0..<length].withUnsafeBytes({
+            try destination.write($0)
         })
         guard length == count else {
             preconditionFailure("read: \(length), write: \(count)")
