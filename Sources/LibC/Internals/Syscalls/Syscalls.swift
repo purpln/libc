@@ -221,6 +221,12 @@ internal func system_setenv(
     setenv(name, value, overwrite)
 }
 
+internal func system_unsetenv(
+    _ name: UnsafePointer<PlatformChar>
+) -> CInt {
+    unsetenv(name)
+}
+
 internal func system_getcwd(
     _ buffer: UnsafeMutablePointer<PlatformChar>?,
     _ size: size_t

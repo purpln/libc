@@ -20,10 +20,21 @@ internal func setenv(
 ) -> CInt {
     if overwrite == 0 {
         if GetEnvironmentVariableW(name, nil, 0) == 0 && GetLastError() != ERROR_ENVVAR_NOT_FOUND {
-            print("found")
+            return 0
         }
     }
     guard SetEnvironmentVariableW(name, value) else {
+        ucrt._set_errno(Win32Error().errno.rawValue)
+        return -1
+    }
+    return 0
+}
+
+@inline(__always)
+internal func unsetenv(
+    _ name: UnsafePointer<PlatformChar>
+) -> CInt {
+    guard SetEnvironmentVariableW(name, nil) else {
         ucrt._set_errno(Win32Error().errno.rawValue)
         return -1
     }
