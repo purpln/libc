@@ -6,9 +6,9 @@ let package = Package(name: "LibC", products: [
     .library(name: "LibC", targets: ["LibC"]),
 ], targets: [
     .target(name: "LibC", dependencies: [
-        "System"
+        "LibCExternal"
     ], linkerSettings: [
         .linkedLibrary("android", .when(platforms: [.android])),
     ]),
-    .target(name: "System"),
+    .target(name: "LibCExternal"),
 ])
