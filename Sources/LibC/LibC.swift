@@ -1,4 +1,4 @@
-#if canImport(Darwin.C)
+#if canImport(Darwin)
 @_exported import Darwin
 
 #elseif canImport(Android)
