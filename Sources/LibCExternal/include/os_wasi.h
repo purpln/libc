@@ -27,3 +27,10 @@ static inline int32_t _getConst_EOPNOTSUPP(void) { return EOPNOTSUPP; }
 
 static inline clockid_t _getConst_CLOCK_MONOTONIC(void) { return CLOCK_MONOTONIC; }
 static inline clockid_t _getConst_CLOCK_REALTIME(void) { return CLOCK_REALTIME; }
+
+// Use shim on WASI because wasi-libc defines `d_name` as
+// "flexible array member" which is not supported by
+// ClangImporter yet.
+static inline char * _Nonnull _platform_shims_dirent_d_name(struct dirent * _Nonnull entry) {
+    return entry->d_name;
+}
