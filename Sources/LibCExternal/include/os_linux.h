@@ -13,13 +13,3 @@
 #include <pthread.h>
 #include <sched.h>
 #include <unistd.h>
-
-static inline uint32_t gettid() {
-    static __thread uint32_t tid = 0;
-    
-    if (tid == 0) {
-        tid = syscall(SYS_gettid);
-    }
-    
-    return tid;
-}

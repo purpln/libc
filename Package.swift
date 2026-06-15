@@ -10,3 +10,20 @@ let package = Package(name: "LibC", products: [
     ]),
     .target(name: "LibCExternal"),
 ])
+
+for target in package.targets {
+    guard target.type != .plugin else { continue }
+    target.swiftSettings = target.swiftSettings ?? []
+    target.swiftSettings? += [
+        //swift 6
+        .enableUpcomingFeature("StrictConcurrency"),
+        
+        //swift 7
+        .enableUpcomingFeature("ExistentialAny"),
+        .enableUpcomingFeature("InternalImportsByDefault"),
+        .enableUpcomingFeature("MemberImportVisibility"),
+        .enableUpcomingFeature("InferIsolatedConformances"),
+        .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+        .enableUpcomingFeature("ImmutableWeakCaptures"),
+    ]
+}
