@@ -12,7 +12,8 @@ let package = Package(name: "LibC", products: [
 ])
 
 for target in package.targets {
-    guard target.type != .plugin else { continue }
+    guard ![.system, .plugin].contains(target.type) else { continue }
+    
     target.swiftSettings = target.swiftSettings ?? []
     target.swiftSettings? += [
         //swift 6
