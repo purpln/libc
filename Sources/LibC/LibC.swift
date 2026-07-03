@@ -13,8 +13,8 @@
 #elseif canImport(Musl)
 @_exported import Musl
 
-#elseif canImport(ucrt)
-@_exported import ucrt
+#elseif canImport(WinSDK)
+@_exported import WinSDK
 
 #endif
 @_exported import LibCExternal
