@@ -1,4 +1,4 @@
-// swift-tools-version: 6.2
+// swift-tools-version: 5.5
 
 import PackageDescription
 
@@ -10,21 +10,3 @@ let package = Package(name: "LibC", products: [
     ]),
     .target(name: "LibCExternal"),
 ])
-
-for target in package.targets {
-    guard ![.system, .plugin].contains(target.type) else { continue }
-    
-    target.swiftSettings = target.swiftSettings ?? []
-    target.swiftSettings? += [
-        //swift 6
-        .enableUpcomingFeature("StrictConcurrency"),
-        
-        //swift 7
-        .enableUpcomingFeature("ExistentialAny"),
-        .enableUpcomingFeature("InternalImportsByDefault"),
-        .enableUpcomingFeature("MemberImportVisibility"),
-        .enableUpcomingFeature("InferIsolatedConformances"),
-        .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
-        .enableUpcomingFeature("ImmutableWeakCaptures"),
-    ]
-}
